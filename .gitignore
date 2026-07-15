@@ -1,0 +1,5 @@
+# Generated presentation inspection output
+*.pptx.inspect.ndjson
+
+# Superseded, unassigned logo export
+SkillSync/Assets.xcassets/SkillSyncLogo.imageset/8607c18d-a68d-43f3-bb1a-dff0adb130c3.png

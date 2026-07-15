@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillSync — Building Real Understanding</title>
+  <style>
+    :root {
+      --ink: #f7fbff;
+      --muted: rgba(226, 239, 255, 0.68);
+      --cyan: #17d8f5;
+      --blue: #2778ff;
+      --purple: #8557ff;
+      --night: #020414;
+      --night-2: #071029;
+      --line: rgba(255,255,255,0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--night);
+      color: var(--ink);
+      font-family: Inter, ui-rounded, "SF Pro Rounded", "Avenir Next", system-ui, sans-serif;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      width: 54vw;
+      height: 54vw;
+      border-radius: 50%;
+      filter: blur(110px);
+      pointer-events: none;
+      opacity: 0.17;
+      z-index: 0;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+
+    body::before { background: var(--cyan); left: -24vw; top: -24vw; }
+    body::after { background: var(--purple); right: -25vw; bottom: -28vw; animation-delay: -5s; }
+
+    @keyframes drift {
+      to { transform: translate3d(9vw, 5vh, 0) scale(1.12); }
+    }
+
+    #webgl-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 900ms ease;
+    }
+
+    body.webgl-ready #webgl-bg { opacity: 1; }
+    body.webgl-ready::before,
+    body.webgl-ready::after { opacity: .05; }
+
+    .deck {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      padding: clamp(38px, 5.3vw, 84px);
+      opacity: 0;
+      visibility: hidden;
+      --reveal-x: 76%;
+      transform: scale(.94);
+      filter: blur(14px) saturate(.78);
+      clip-path: circle(0 at var(--reveal-x) 50%);
+      transition:
+        opacity 520ms ease,
+        transform 900ms cubic-bezier(.16,1,.3,1),
+        filter 650ms ease,
+        clip-path 900ms cubic-bezier(.65,0,.22,1),
+        visibility 0s linear 900ms;
+      overflow: hidden;
+      isolation: isolate;
+      contain: layout paint;
+      backface-visibility: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+      filter: blur(0) saturate(1);
+      clip-path: circle(92vmax at var(--reveal-x) 50%);
+      transition-delay: 90ms, 90ms, 90ms, 90ms, 0s;
+      z-index: 2;
+    }
+
+    .slide.leaving {
+      visibility: hidden;
+      opacity: 0;
+      transform: scale(1);
+      filter: none;
+      clip-path: circle(0 at var(--reveal-x) 50%);
+      transition: none;
+      z-index: 1;
+    }
+
+    .transition-flare {
+      position: fixed;
+      inset: -20%;
+      z-index: 8;
+      opacity: 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      background: linear-gradient(105deg,
+        transparent 36%,
+        rgba(23,216,245,.08) 43%,
+        rgba(157,236,255,.42) 49%,
+        rgba(133,87,255,.30) 53%,
+        transparent 61%);
+      filter: blur(12px);
+      transform: translate3d(-115%, 0, 0) skewX(-8deg);
+    }
+
+    .transition-flare.play-forward { animation: flare-forward 920ms cubic-bezier(.55,0,.2,1); }
+    .transition-flare.play-backward { animation: flare-backward 920ms cubic-bezier(.55,0,.2,1); }
+
+    @keyframes flare-forward {
+      0% { opacity: 0; transform: translate3d(-115%, 0, 0) skewX(-8deg); }
+      35% { opacity: .72; }
+      100% { opacity: 0; transform: translate3d(115%, 0, 0) skewX(-8deg); }
+    }
+
+    @keyframes flare-backward {
+      0% { opacity: 0; transform: translate3d(115%, 0, 0) skewX(8deg); }
+      35% { opacity: .72; }
+      100% { opacity: 0; transform: translate3d(-115%, 0, 0) skewX(8deg); }
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 75% 25%, rgba(39,120,255,.14), transparent 33%),
+        radial-gradient(circle at 18% 78%, rgba(133,87,255,.12), transparent 38%),
+        linear-gradient(135deg, rgba(2,4,20,.96), rgba(7,16,41,.93));
+    }
+
+    body.webgl-ready .slide::before {
+      background:
+        radial-gradient(circle at 75% 25%, rgba(39,120,255,.08), transparent 34%),
+        radial-gradient(circle at 18% 78%, rgba(133,87,255,.07), transparent 39%),
+        linear-gradient(135deg, rgba(2,4,20,.58), rgba(7,16,41,.48));
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      left: -8%;
+      right: -8%;
+      bottom: 5%;
+      height: 24%;
+      z-index: -1;
+      opacity: .35;
+      background:
+        radial-gradient(ellipse at 50% 100%, rgba(23,216,245,.23), transparent 57%),
+        repeating-radial-gradient(ellipse at 50% 140%, transparent 0 18px, rgba(39,120,255,.15) 19px 21px, transparent 22px 38px);
+      filter: blur(1px);
+      animation: breathe 7s ease-in-out infinite alternate;
+    }
+
+    @keyframes breathe { to { transform: translateY(-14px) scaleX(1.05); opacity: .5; } }
+
+    .eyebrow {
+      color: var(--cyan);
+      font-size: clamp(12px, 1vw, 16px);
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      font-size: clamp(64px, 9vw, 138px);
+      line-height: .88;
+      letter-spacing: -.065em;
+      font-family: Futura, "Avenir Next Condensed", "Helvetica Neue", sans-serif;
+      font-weight: 700;
+    }
+
+    h2 {
+      max-width: 1040px;
+      font-size: clamp(40px, 5.1vw, 78px);
+      line-height: 1.02;
+      letter-spacing: -.045em;
+      font-weight: 870;
+    }
+
+    .gradient-text {
+      background: linear-gradient(120deg, #fff 5%, var(--cyan) 42%, var(--blue) 66%, var(--purple) 92%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: clamp(18px, 1.65vw, 27px);
+      line-height: 1.5;
+      max-width: 760px;
+    }
+
+    .slide-number {
+      position: absolute;
+      right: clamp(30px, 4vw, 64px);
+      top: clamp(26px, 3.4vw, 54px);
+      color: rgba(255,255,255,.36);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .16em;
+    }
+
+    /* 01 */
+    .hero {
+      grid-template-columns: 1.05fr .95fr;
+      align-items: center;
+      gap: 5vw;
+    }
+
+    .hero-copy { display: grid; gap: 24px; align-content: center; }
+    .hero-copy .tagline { color: var(--muted); font-size: clamp(20px, 2vw, 31px); font-weight: 650; }
+    .credits { margin-top: 28px; font-size: clamp(15px, 1.25vw, 20px); color: rgba(255,255,255,.52); }
+    .credits strong { color: #fff; }
+
+    .logo-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 60vh;
+    }
+
+    .logo-stage::before,
+    .logo-stage::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(23,216,245,.25);
+      animation: orbit 10s linear infinite;
+    }
+
+    .logo-stage::before { width: 82%; aspect-ratio: 1; }
+    .logo-stage::after { width: 62%; aspect-ratio: 1; border-color: rgba(133,87,255,.28); animation-direction: reverse; animation-duration: 7s; }
+    @keyframes orbit { to { transform: rotate(360deg); } }
+
+    .logo-stage img {
+      width: min(38vw, 500px);
+      max-height: 62vh;
+      object-fit: contain;
+      filter: drop-shadow(0 0 42px rgba(23,216,245,.22)) drop-shadow(0 0 70px rgba(133,87,255,.18));
+      animation: logo-float 5s ease-in-out infinite;
+    }
+
+    @keyframes logo-float { 50% { transform: translateY(-12px) scale(1.015); } }
+
+    /* 02 */
+    .purpose { grid-template-rows: auto auto 1fr; gap: 24px; align-content: start; }
+    .purpose .lead { max-width: 970px; }
+    .learning-path {
+      align-self: end;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      border-top: 1px solid var(--line);
+      padding-top: 30px;
+    }
+
+    .step { padding: 6px 34px 6px 0; position: relative; }
+    .step + .step { padding-left: 34px; border-left: 1px solid var(--line); }
+    .step-num { color: var(--cyan); font-size: 14px; font-weight: 900; letter-spacing: .16em; }
+    .step h3 { margin-top: 12px; font-size: clamp(25px, 2.3vw, 37px); letter-spacing: -.03em; }
+    .step p { margin-top: 10px; color: var(--muted); font-size: clamp(15px, 1.25vw, 20px); line-height: 1.48; }
+
+    .audience-line {
+      justify-self: end;
+      align-self: start;
+      color: rgba(255,255,255,.62);
+      font-size: clamp(14px, 1.2vw, 19px);
+      font-weight: 700;
+    }
+
+    /* 03 */
+    .comparison { grid-template-rows: auto 1fr; gap: 34px; }
+    .compare-grid { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 44px; align-items: center; }
+    .divider { width: 1px; height: 68%; background: linear-gradient(transparent, var(--line), transparent); }
+    .compare-side { display: grid; align-content: center; gap: 20px; }
+    .compare-side h3 { font-size: clamp(30px, 3.4vw, 52px); letter-spacing: -.04em; }
+    .compare-side p { color: var(--muted); font-size: clamp(17px, 1.45vw, 23px); line-height: 1.52; }
+    .sequence { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
+    .sequence span { font-size: clamp(14px, 1.1vw, 18px); font-weight: 800; color: rgba(255,255,255,.82); }
+    .sequence b { color: var(--cyan); font-size: 22px; }
+    .ask-ai { opacity: .72; }
+    .skillsync-side { padding: 30px; border: 1px solid rgba(23,216,245,.25); border-radius: 28px; background: linear-gradient(135deg, rgba(23,216,245,.08), rgba(133,87,255,.08)); box-shadow: 0 24px 70px rgba(0,0,0,.25); }
+    .skillsync-side h3 { font-family: Futura, "Avenir Next Condensed", "Helvetica Neue", sans-serif; letter-spacing: -.055em; }
+
+    /* 04 */
+    .future { grid-template-rows: auto auto 1fr; gap: 24px; }
+    .roadmap { align-self: end; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .road-item { border-top: 2px solid; padding-top: 22px; }
+    .road-item:nth-child(1) { border-color: var(--cyan); }
+    .road-item:nth-child(2) { border-color: var(--blue); }
+    .road-item:nth-child(3) { border-color: var(--purple); }
+    .road-item small { color: rgba(255,255,255,.42); font-weight: 900; letter-spacing: .14em; }
+    .road-item h3 { margin-top: 16px; font-size: clamp(25px, 2.5vw, 40px); letter-spacing: -.035em; }
+    .road-item p { margin-top: 12px; color: var(--muted); font-size: clamp(15px, 1.25vw, 20px); line-height: 1.48; }
+
+    /* 05 */
+    .closing { place-items: center; text-align: center; }
+    .closing-inner { display: grid; gap: 30px; max-width: 1080px; justify-items: center; }
+    .closing h2 { font-size: clamp(47px, 6.3vw, 98px); }
+    .closing .lead { max-width: 830px; }
+    .closing-mark {
+      width: clamp(76px, 8vw, 120px);
+      filter: drop-shadow(0 0 30px rgba(23,216,245,.28));
+    }
+    .closing-line { width: min(260px, 32vw); height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), transparent); }
+
+    .controls {
+      position: fixed;
+      z-index: 20;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 10px 13px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 999px;
+      background: rgba(4,8,27,.58);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.28);
+    }
+
+    .nav-button {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 50%;
+      color: white;
+      background: rgba(255,255,255,.08);
+      cursor: pointer;
+      font-size: 20px;
+      transition: transform 180ms ease, background 180ms ease;
+    }
+
+    .nav-button:hover { background: rgba(23,216,245,.22); transform: scale(1.08); }
+    .nav-button:disabled { opacity: .28; cursor: default; transform: none; }
+    .dots { display: flex; gap: 8px; }
+    .dot { width: 7px; height: 7px; border: 0; padding: 0; border-radius: 50%; background: rgba(255,255,255,.25); cursor: pointer; transition: width 240ms ease, background 240ms ease; }
+    .dot.active { width: 25px; border-radius: 6px; background: linear-gradient(90deg, var(--cyan), var(--purple)); }
+
+    .hint { position: fixed; right: 28px; bottom: 29px; z-index: 20; color: rgba(255,255,255,.3); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+
+    @media (max-width: 850px), (max-aspect-ratio: 4/3) {
+      .hero { grid-template-columns: 1fr; text-align: center; gap: 0; }
+      .logo-stage { min-height: 32vh; order: -1; }
+      .logo-stage img { width: min(42vw, 250px); }
+      .hero-copy { justify-items: center; }
+      .learning-path, .roadmap { gap: 18px; }
+      .step, .step + .step { padding: 8px 14px; }
+      .compare-grid { gap: 22px; }
+      .hint { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="webgl-bg" aria-hidden="true"></canvas>
+  <main class="deck" aria-label="SkillSync presentation">
+    <section class="slide hero active" data-title="SkillSync">
+      <span class="slide-number">01 / 05</span>
+      <div class="hero-copy">
+        <span class="eyebrow">Building real understanding</span>
+        <h1 class="gradient-text">Skill<br>Sync</h1>
+        <p class="tagline">Practice that turns questions into knowledge.</p>
+        <p class="credits">By <strong>ChatGPT Codex</strong> + <strong>Oli</strong></p>
+      </div>
+      <div class="logo-stage" aria-hidden="true">
+        <img src="../SkillSync/Assets.xcassets/SkillSyncLogo.imageset/SkillSyncSymbol.png" alt="">
+      </div>
+    </section>
+
+    <section class="slide purpose" data-title="What SkillSync does">
+      <span class="slide-number">02 / 05</span>
+      <span class="eyebrow">What SkillSync does</span>
+      <div>
+        <h2>Practice reveals what students <span class="gradient-text">truly understand.</span></h2>
+        <p class="lead" style="margin-top:22px">Designed for elementary and middle school students, SkillSync reinforces classroom topics through review questions and problems students answer themselves.</p>
+      </div>
+      <div class="learning-path">
+        <article class="step">
+          <span class="step-num">01</span>
+          <h3>Review</h3>
+          <p>Return to the ideas that matter most—not a generic list of answers.</p>
+        </article>
+        <article class="step">
+          <span class="step-num">02</span>
+          <h3>Respond</h3>
+          <p>Students work through questions and problems using their own thinking.</p>
+        </article>
+        <article class="step">
+          <span class="step-num">03</span>
+          <h3>Understand</h3>
+          <p>Feedback shows what is secure, what needs review, and what to try next.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide comparison" data-title="Why not just ask AI?">
+      <span class="slide-number">03 / 05</span>
+      <div>
+        <span class="eyebrow">Why not just ask AI?</span>
+        <h2 style="margin-top:18px">Answers can finish a problem. <span class="gradient-text">Learning builds capability.</span></h2>
+      </div>
+      <div class="compare-grid">
+        <article class="compare-side ask-ai">
+          <h3>Answer-first AI</h3>
+          <p>A student asks, receives an answer, and may never discover whether they could solve the next problem independently.</p>
+          <div class="sequence"><span>ASK</span><b>→</b><span>ANSWER</span><b>→</b><span>DONE</span></div>
+        </article>
+        <div class="divider" aria-hidden="true"></div>
+        <article class="compare-side skillsync-side">
+          <h3 class="gradient-text">SkillSync</h3>
+          <p>AI works quietly behind the experience—reviewing responses, checking understanding, and tailoring school-focused practice.</p>
+          <div class="sequence"><span>TRY</span><b>→</b><span>CHECK</span><b>→</b><span>REVIEW</span><b>→</b><span>GROW</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide future" data-title="Future improvements">
+      <span class="slide-number">04 / 05</span>
+      <span class="eyebrow">Future improvements</span>
+      <div>
+        <h2>The foundation is here. The next step is a <span class="gradient-text">stronger learning experience.</span></h2>
+        <p class="lead" style="margin-top:22px">SkillSync is still early. Its future depends on making every interaction clearer, smarter, and more useful to young learners.</p>
+      </div>
+      <div class="roadmap">
+        <article class="road-item">
+          <small>DESIGN</small>
+          <h3>Polish the UI</h3>
+          <p>Improve navigation, accessibility, animation, and classroom-friendly visual clarity.</p>
+        </article>
+        <article class="road-item">
+          <small>INTELLIGENCE</small>
+          <h3>Deepen review</h3>
+          <p>Make feedback more precise and practice more responsive to each learner’s knowledge gaps.</p>
+        </article>
+        <article class="road-item">
+          <small>PROGRESS</small>
+          <h3>Show growth</h3>
+          <p>Help students see what they know, what improved, and where to focus next.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide closing" data-title="Conclusion">
+      <span class="slide-number">05 / 05</span>
+      <div class="closing-inner">
+        <img class="closing-mark" src="../SkillSync/Assets.xcassets/SkillSyncLogo.imageset/SkillSyncSymbol.png" alt="SkillSync logo">
+        <span class="eyebrow">The SkillSync promise</span>
+        <h2>AI should not replace thinking. It should help students <span class="gradient-text">think better.</span></h2>
+        <div class="closing-line"></div>
+        <p class="lead">SkillSync turns review into understanding—so students can answer with confidence because they know why.</p>
+      </div>
+    </section>
+  </main>
+  <div class="transition-flare" id="transition-flare" aria-hidden="true"></div>
+
+  <nav class="controls" aria-label="Slide navigation">
+    <button class="nav-button" id="prev" aria-label="Previous slide">‹</button>
+    <div class="dots" id="dots" aria-label="Choose slide"></div>
+    <button class="nav-button" id="next" aria-label="Next slide">›</button>
+  </nav>
+  <div class="hint">Arrow keys to navigate</div>
+
+  <script>
+    function createWebGLBackground() {
+      const canvas = document.getElementById('webgl-bg');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const gl = canvas.getContext('webgl', {
+        alpha: false,
+        antialias: false,
+        depth: false,
+        powerPreference: 'high-performance'
+      });
+
+      const idleController = { setSlide() {} };
+      if (!gl) return idleController;
+
+      const vertexSource = `
+        attribute vec2 a_position;
+        void main() {
+          gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+      `;
+
+      const fragmentSource = `
+        precision highp float;
+
+        uniform vec2 u_resolution;
+        uniform vec2 u_pointer;
+        uniform float u_time;
+        uniform float u_slide;
+        uniform float u_pulse;
+
+        float hash21(vec2 p) {
+          p = fract(p * vec2(123.34, 456.21));
+          p += dot(p, p + 45.32);
+          return fract(p.x * p.y);
+        }
+
+        float river(float y, float line, float spread) {
+          float distanceToLine = abs(y - line);
+          return exp(-distanceToLine * spread) + .42 * exp(-distanceToLine * spread * 4.2);
+        }
+
+        void main() {
+          vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+          vec2 p = uv - .5;
+          p.x *= u_resolution.x / u_resolution.y;
+
+          float t = u_time;
+          float phase = u_slide * 1.37;
+          float paletteShift = .5 + .5 * sin(u_slide * 1.75);
+          vec3 cyan = mix(vec3(.03, .84, .96), vec3(.12, .48, 1.0), paletteShift);
+          vec3 blue = vec3(.10, .30, 1.0);
+          vec3 violet = mix(vec3(.44, .18, 1.0), vec3(.72, .24, .96), paletteShift);
+          vec3 color = mix(vec3(.004, .008, .045), vec3(.018, .035, .11), uv.y);
+
+          float curve1 = .22 + .055 * sin(p.x * 4.7 + t * .43 + phase)
+            + .022 * sin(p.x * 13.0 - t * .72);
+          float curve2 = .49 + .070 * sin(p.x * 3.8 - t * .31 + phase * .72)
+            + .026 * sin(p.x * 10.4 + t * .58);
+          float curve3 = .77 + .050 * sin(p.x * 5.9 + t * .37 - phase * .9)
+            + .018 * sin(p.x * 16.0 - t * .45);
+
+          float current1 = river(uv.y, curve1, 13.5);
+          float current2 = river(uv.y, curve2, 16.0);
+          float current3 = river(uv.y, curve3, 14.0);
+          float shimmer = .72 + .28 * sin((p.x + uv.y) * 19.0 - t * 1.4);
+          color += cyan * current1 * (.115 + .035 * shimmer);
+          color += blue * current2 * (.105 + .030 * shimmer);
+          color += violet * current3 * (.12 + .035 * shimmer);
+
+          vec2 orbA = p - vec2(-.56 + .18 * sin(t * .17 + phase), .27 + .10 * cos(t * .21));
+          vec2 orbB = p - vec2(.62 + .15 * cos(t * .13), -.31 + .12 * sin(t * .19 + phase));
+          color += cyan * .055 / (1.0 + 8.5 * dot(orbA, orbA));
+          color += violet * .060 / (1.0 + 8.0 * dot(orbB, orbB));
+
+          vec2 pointer = (u_pointer - .5) * vec2(u_resolution.x / u_resolution.y, 1.0);
+          float pointerGlow = exp(-4.2 * length(p - pointer));
+          color += mix(cyan, violet, paletteShift) * pointerGlow * .075;
+
+          vec2 gridSize = vec2(28.0, 16.0);
+          vec2 grid = uv * gridSize;
+          vec2 cell = floor(grid);
+          vec2 local = fract(grid) - .5;
+          vec2 starOffset = vec2(hash21(cell + 3.1), hash21(cell + 8.7)) - .5;
+          float seed = hash21(cell);
+          float star = smoothstep(.055, 0.0, length(local - starOffset * .62));
+          star *= step(.83, seed) * (.35 + .65 * sin(t * (1.1 + seed) + seed * 18.0) * .5 + .325);
+          color += mix(cyan, violet, seed) * star * .38;
+
+          float transitionHalo = u_pulse * exp(-5.2 * abs(length(p) - (.10 + u_pulse * .76)));
+          color += mix(cyan, violet, uv.x) * transitionHalo * .52;
+
+          float vignette = 1.0 - smoothstep(.50, 1.03, length(p));
+          color *= .66 + .34 * vignette;
+          color += vec3(.018, .028, .075) * (1.0 - vignette);
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `;
+
+      function makeShader(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          console.warn('WebGL shader unavailable:', gl.getShaderInfoLog(shader));
+          gl.deleteShader(shader);
+          return null;
+        }
+        return shader;
+      }
+
+      const vertexShader = makeShader(gl.VERTEX_SHADER, vertexSource);
+      const fragmentShader = makeShader(gl.FRAGMENT_SHADER, fragmentSource);
+      if (!vertexShader || !fragmentShader) return idleController;
+
+      const program = gl.createProgram();
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.warn('WebGL scene unavailable:', gl.getProgramInfoLog(program));
+        return idleController;
+      }
+
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      gl.useProgram(program);
+      const position = gl.getAttribLocation(program, 'a_position');
+      gl.enableVertexAttribArray(position);
+      gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+      const uniforms = {
+        resolution: gl.getUniformLocation(program, 'u_resolution'),
+        pointer: gl.getUniformLocation(program, 'u_pointer'),
+        time: gl.getUniformLocation(program, 'u_time'),
+        slide: gl.getUniformLocation(program, 'u_slide'),
+        pulse: gl.getUniformLocation(program, 'u_pulse')
+      };
+
+      let slide = 0;
+      let slideTarget = 0;
+      let pulse = 0;
+      let pointerX = .5;
+      let pointerY = .5;
+      let targetPointerX = .5;
+      let targetPointerY = .5;
+      let startTime = performance.now();
+      let frameRequest = 0;
+
+      function resize() {
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.round(canvas.clientWidth * pixelRatio);
+        const height = Math.round(canvas.clientHeight * pixelRatio);
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+          gl.viewport(0, 0, width, height);
+        }
+      }
+
+      function draw(now = performance.now()) {
+        resize();
+        const moves = !reducedMotion.matches;
+        const elapsed = moves ? (now - startTime) / 1000 : 1.25;
+        slide += (slideTarget - slide) * (moves ? .045 : 1);
+        pointerX += (targetPointerX - pointerX) * (moves ? .055 : 1);
+        pointerY += (targetPointerY - pointerY) * (moves ? .055 : 1);
+        pulse = moves ? pulse * .935 : 0;
+
+        gl.useProgram(program);
+        gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
+        gl.uniform2f(uniforms.pointer, pointerX, pointerY);
+        gl.uniform1f(uniforms.time, elapsed);
+        gl.uniform1f(uniforms.slide, slide);
+        gl.uniform1f(uniforms.pulse, pulse);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+        if (moves) frameRequest = requestAnimationFrame(draw);
+      }
+
+      function restartAnimation() {
+        cancelAnimationFrame(frameRequest);
+        startTime = performance.now();
+        draw();
+      }
+
+      window.addEventListener('pointermove', event => {
+        targetPointerX = event.clientX / window.innerWidth;
+        targetPointerY = 1 - event.clientY / window.innerHeight;
+      }, { passive: true });
+      window.addEventListener('resize', () => {
+        resize();
+        if (reducedMotion.matches) draw();
+      });
+      reducedMotion.addEventListener?.('change', restartAnimation);
+      canvas.addEventListener('webglcontextlost', event => {
+        event.preventDefault();
+        cancelAnimationFrame(frameRequest);
+        document.body.classList.remove('webgl-ready');
+      });
+
+      document.body.classList.add('webgl-ready');
+      draw();
+
+      return {
+        setSlide(nextSlide) {
+          slideTarget = nextSlide;
+          pulse = reducedMotion.matches ? 0 : 1;
+          if (reducedMotion.matches) draw();
+        }
+      };
+    }
+
+    const webGLBackground = createWebGLBackground();
+    const slides = [...document.querySelectorAll('.slide')];
+    const dotsHost = document.getElementById('dots');
+    const prev = document.getElementById('prev');
+    const next = document.getElementById('next');
+    const transitionFlare = document.getElementById('transition-flare');
+    let index = 0;
+    let flareRun = 0;
+
+    slides.forEach((slide, i) => {
+      const dot = document.createElement('button');
+      dot.className = `dot${i === 0 ? ' active' : ''}`;
+      dot.setAttribute('aria-label', `Go to slide ${i + 1}: ${slide.dataset.title}`);
+      dot.addEventListener('click', () => show(i));
+      dotsHost.appendChild(dot);
+    });
+
+    const dots = [...document.querySelectorAll('.dot')];
+
+    function show(nextIndex) {
+      nextIndex = Math.max(0, Math.min(slides.length - 1, nextIndex));
+      if (nextIndex === index) return;
+      const direction = nextIndex > index ? 1 : -1;
+      const previousSlide = slides[index];
+      const incomingSlide = slides[nextIndex];
+      slides.forEach(slide => {
+        slide.classList.remove('active', 'leaving');
+        if (slide !== previousSlide && slide !== incomingSlide) {
+          slide.style.removeProperty('--reveal-x');
+        }
+      });
+      previousSlide.style.setProperty('--reveal-x', direction > 0 ? '24%' : '76%');
+      incomingSlide.style.setProperty('--reveal-x', direction > 0 ? '76%' : '24%');
+      previousSlide.classList.add('leaving');
+      incomingSlide.classList.remove('leaving');
+
+      transitionFlare.classList.remove('play-forward', 'play-backward');
+      void transitionFlare.offsetWidth;
+      transitionFlare.classList.add(direction > 0 ? 'play-forward' : 'play-backward');
+      const currentFlareRun = ++flareRun;
+
+      void incomingSlide.offsetWidth;
+      incomingSlide.classList.add('active');
+      setTimeout(() => {
+        previousSlide.classList.remove('leaving');
+        if (currentFlareRun === flareRun) {
+          transitionFlare.classList.remove('play-forward', 'play-backward');
+        }
+      }, 430);
+      dots[index].classList.remove('active');
+      dots[nextIndex].classList.add('active');
+      index = nextIndex;
+      webGLBackground.setSlide(index);
+      prev.disabled = index === 0;
+      next.disabled = index === slides.length - 1;
+    }
+
+    prev.addEventListener('click', () => show(index - 1));
+    next.addEventListener('click', () => show(index + 1));
+    document.addEventListener('keydown', event => {
+      if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); show(index + 1); }
+      if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); show(index - 1); }
+      if (event.key === 'Home') show(0);
+      if (event.key === 'End') show(slides.length - 1);
+    });
+
+    prev.disabled = true;
+  </script>
+</body>
+</html>

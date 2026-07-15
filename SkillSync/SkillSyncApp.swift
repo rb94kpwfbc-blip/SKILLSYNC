@@ -1,10 +1,3 @@
-//
-//  SkillSyncApp.swift
-//  SkillSync
-//
-//  Created by Oliver Zhang on 7/13/26.
-//
-
 import SwiftUI
 
 @main
