@@ -447,20 +447,22 @@ struct LiquidScreenTransition: View, Animatable {
 
 struct HomeView: View {
     let logout: () -> Void
+    @State private var selectedTab = SkillSyncTab.home
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AmbientBackgroundView(isAnimated: true)
+        TabView(selection: $selectedTab) {
+            NavigationStack {
+                ZStack {
+                    AmbientBackgroundView(isAnimated: true)
 
-                GlowingWaveOverlay(
-                    intensity: 0.38,
-                    verticalOffset: 110,
-                    isAnimated: true
-                )
+                    GlowingWaveOverlay(
+                        intensity: 0.38,
+                        verticalOffset: 110,
+                        isAnimated: true
+                    )
 
-                ScrollView {
-                    VStack(spacing: 22) {
+                    ScrollView {
+                        VStack(spacing: 22) {
                         BubbleTitle(text: "Welcome to\nSkillSync")
 
                         Text("Understand It, Don’t Just Answer It.")
@@ -480,12 +482,7 @@ struct HomeView: View {
                             )
 
                         VStack(spacing: 14) {
-                            ExpandableLearningTab(
-                                title: "Explore Topics",
-                                systemImage: "books.vertical.fill",
-                                accent: .cyan,
-                                placeholder: "Topic categories will appear here."
-                            )
+                            ExploreTopicsView()
 
                             ExpandableLearningTab(
                                 title: "Continue Learning",
@@ -515,14 +512,273 @@ struct HomeView: View {
                         .tint(.red.opacity(0.72))
                         .padding(.bottom, 24)
                     }
+                        .frame(maxWidth: 560)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 28)
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+            }
+            .tabItem {
+                Label("Home", systemImage: "house.fill")
+            }
+            .tag(SkillSyncTab.home)
+
+            LearningProgressView()
+                .tabItem {
+                    Label("Progress", systemImage: "chart.bar.fill")
+                }
+                .tag(SkillSyncTab.progress)
+        }
+        .tint(.cyan)
+        .preferredColorScheme(.dark)
+    }
+}
+
+enum SkillSyncTab {
+    case home
+    case progress
+}
+
+struct LearningProgressView: View {
+    @State private var selectedTopic = ProgressTopic.science
+
+    private var units: [LearningUnit] {
+        if selectedTopic == .science {
+            return [
+                LearningUnit(title: "Periodic Table of Elements", topic: "Science", isCompleted: false),
+                LearningUnit(title: "Placeholder 1", topic: "Science", isCompleted: false),
+                LearningUnit(title: "Placeholder 2", topic: "Science", isCompleted: false),
+                LearningUnit(title: "Placeholder 3", topic: "Science", isCompleted: false),
+                LearningUnit(title: "Placeholder 4", topic: "Science", isCompleted: false),
+                LearningUnit(title: "Placeholder 5", topic: "Science", isCompleted: false),
+                LearningUnit(title: "Placeholder 6", topic: "Science", isCompleted: false)
+            ]
+        }
+
+        return (1...7).map { number in
+            LearningUnit(
+                title: "Placeholder Unit \(number)",
+                topic: selectedTopic.title,
+                isCompleted: false
+            )
+        }
+    }
+
+    private var completedCount: Int {
+        units.filter(\.isCompleted).count
+    }
+
+    private var progress: Double {
+        guard !units.isEmpty else { return 0 }
+        return Double(completedCount) / Double(units.count)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                AmbientBackgroundView(isAnimated: true)
+
+                ScrollView {
+                    VStack(spacing: 22) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 10) {
+                                ForEach(ProgressTopic.allCases) { topic in
+                                    Button {
+                                        withAnimation(.easeInOut(duration: 0.25)) {
+                                            selectedTopic = topic
+                                        }
+                                    } label: {
+                                        HStack(spacing: 7) {
+                                            Image(systemName: topic == .science ? "atom" : "square.dashed")
+
+                                            Text(topic.title)
+                                        }
+                                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                                        .foregroundStyle(selectedTopic == topic ? .white : .white.opacity(0.5))
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 10)
+                                        .background {
+                                            if selectedTopic == topic {
+                                                LinearGradient(
+                                                    colors: [.cyan, .blue, .purple],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                )
+                                            } else {
+                                                Color.white.opacity(0.07)
+                                            }
+                                        }
+                                        .clipShape(Capsule())
+                                        .overlay {
+                                            Capsule()
+                                                .stroke(.white.opacity(0.1), lineWidth: 1)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal, 2)
+                        }
+
+                        BubbleTitle(text: "Your Progress")
+
+                        Text(selectedTopic.title)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.cyan, .blue, .purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+
+                        VStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .stroke(.white.opacity(0.1), lineWidth: 16)
+
+                                Circle()
+                                    .trim(from: 0, to: progress)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.cyan, .blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        style: StrokeStyle(lineWidth: 16, lineCap: .round)
+                                    )
+                                    .rotationEffect(.degrees(-90))
+
+                                VStack(spacing: 3) {
+                                    Text("\(Int(progress * 100))%")
+                                        .font(.system(size: 34, weight: .black, design: .rounded))
+                                        .foregroundStyle(.white)
+
+                                    Text("completed")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.white.opacity(0.6))
+                                }
+                            }
+                            .frame(width: 170, height: 170)
+
+                            Text("\(completedCount) of \(units.count) units completed")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.8))
+                        }
+                        .padding(24)
+                        .frame(maxWidth: .infinity)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 26))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 26)
+                                .stroke(.cyan.opacity(0.2), lineWidth: 1)
+                        }
+
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("Learning Topics")
+                                .font(.title2.bold())
+                                .foregroundStyle(.white)
+
+                            ForEach(units) { unit in
+                                if selectedTopic == .science &&
+                                    unit.title == "Periodic Table of Elements" {
+                                    NavigationLink {
+                                        PeriodicTableLessonView()
+                                    } label: {
+                                        LearningUnitRow(unit: unit, showsChevron: true)
+                                    }
+                                    .buttonStyle(.plain)
+                                } else {
+                                    LearningUnitRow(unit: unit, showsChevron: false)
+                                }
+                            }
+                        }
+                    }
                     .frame(maxWidth: 560)
                     .padding(.horizontal, 20)
-                    .padding(.top, 28)
+                    .padding(.vertical, 28)
                     .frame(maxWidth: .infinity)
                 }
             }
         }
-        .preferredColorScheme(.dark)
+    }
+}
+
+struct LearningUnitRow: View {
+    let unit: LearningUnit
+    let showsChevron: Bool
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: unit.isCompleted ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 25, weight: .semibold))
+                .foregroundStyle(unit.isCompleted ? .cyan : .white.opacity(0.3))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(unit.title)
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Text(unit.topic)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
+
+            Spacer()
+
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundStyle(.cyan)
+            } else {
+                Text(unit.isCompleted ? "Completed" : "Not started")
+                    .font(.caption2.bold())
+                    .foregroundStyle(unit.isCompleted ? .cyan : .white.opacity(0.4))
+            }
+        }
+        .padding(15)
+        .background(
+            Color.white.opacity(0.06),
+            in: RoundedRectangle(cornerRadius: 17)
+        )
+    }
+}
+
+struct LearningUnit: Identifiable {
+    let id = UUID()
+    let title: String
+    let topic: String
+    let isCompleted: Bool
+}
+
+enum ProgressTopic: String, CaseIterable, Identifiable {
+    case science
+    case placeholder1
+    case placeholder2
+    case placeholder3
+    case placeholder4
+    case placeholder5
+    case placeholder6
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .science:
+            return "Science"
+        case .placeholder1:
+            return "Placeholder 1"
+        case .placeholder2:
+            return "Placeholder 2"
+        case .placeholder3:
+            return "Placeholder 3"
+        case .placeholder4:
+            return "Placeholder 4"
+        case .placeholder5:
+            return "Placeholder 5"
+        case .placeholder6:
+            return "Placeholder 6"
+        }
     }
 }
 
