@@ -499,6 +499,132 @@
     .account-benefit h3 { font-size: clamp(20px, 1.8vw, 29px); letter-spacing: -.025em; }
     .account-benefit p { color: var(--muted); font-size: clamp(14px, 1.1vw, 18px); line-height: 1.45; margin-top: 5px; }
 
+    /* 08 */
+    .periodic-update { grid-template-columns: .92fr 1.08fr; align-items: center; gap: clamp(30px, 4.5vw, 72px); }
+    .improvement-copy { display: grid; gap: 20px; align-content: center; }
+    .improvement-copy h2 { max-width: 790px; }
+    .version-contrast { display: grid; gap: 12px; margin-top: 6px; }
+    .version-note {
+      padding: 13px 16px;
+      border-left: 2px solid rgba(255,255,255,.22);
+      background: linear-gradient(90deg, rgba(255,255,255,.055), transparent);
+      color: var(--muted);
+      font-size: clamp(14px, 1.1vw, 18px);
+      line-height: 1.42;
+    }
+    .version-note strong { color: white; }
+    .version-note.new { border-color: var(--cyan); background: linear-gradient(90deg, rgba(23,216,245,.11), transparent); }
+    .interaction-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .interaction-tags span {
+      padding: 8px 11px;
+      border-radius: 999px;
+      color: rgba(255,255,255,.75);
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.1);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+    .periodic-demo {
+      display: grid;
+      gap: 16px;
+      padding: clamp(20px, 2.2vw, 32px);
+      border-radius: 30px;
+      border: 1px solid rgba(23,216,245,.24);
+      background: linear-gradient(145deg, rgba(23,216,245,.08), rgba(39,120,255,.045), rgba(133,87,255,.09));
+      box-shadow: 0 26px 80px rgba(0,0,0,.28), inset 0 0 55px rgba(39,120,255,.04);
+    }
+    .demo-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
+    .demo-heading h3 { font-size: clamp(23px, 2.2vw, 35px); letter-spacing: -.035em; }
+    .demo-heading small { color: var(--cyan); font-weight: 900; letter-spacing: .12em; }
+    .type-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .type-chip {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: rgba(255,255,255,.68);
+      background: rgba(255,255,255,.045);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 180ms ease, color 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+    .type-chip:hover, .type-chip.selected { transform: translateY(-2px); color: white; border-color: rgba(23,216,245,.48); background: rgba(23,216,245,.12); }
+    .element-gallery { display: grid; grid-template-columns: repeat(6, 1fr); gap: 9px; }
+    .element-sample {
+      position: relative;
+      min-width: 0;
+      aspect-ratio: .84;
+      overflow: visible;
+      border: 0;
+      border-radius: 16px;
+      color: white;
+      background: rgba(2,4,20,.38);
+      cursor: pointer;
+      font: inherit;
+      transition: transform 220ms cubic-bezier(.16,1,.3,1), background 180ms ease;
+    }
+    .element-sample:hover, .element-sample.selected { transform: translateY(-6px) scale(1.035); background: rgba(255,255,255,.075); }
+    .element-sample b { position: relative; z-index: 3; display: block; font-size: clamp(18px, 2vw, 29px); }
+    .element-sample small { position: relative; z-index: 3; display: block; margin-top: 3px; color: rgba(255,255,255,.62); font-size: 9px; font-weight: 800; }
+    .element-surface { position: absolute; inset: 13% 10% 10%; opacity: .82; }
+    .metal .element-surface {
+      clip-path: polygon(13% 18%, 56% 2%, 92% 23%, 83% 78%, 52% 96%, 8% 72%);
+      background-image: linear-gradient(130deg, rgba(20,24,32,.72), rgba(255,255,255,.38), rgba(33,39,50,.62)), url("../SkillSync/Assets.xcassets/ElementMetalTexture.imageset/ElementMetalTexture.png");
+      background-size: cover;
+      background-blend-mode: multiply, normal;
+      box-shadow: 0 8px 22px rgba(39,120,255,.18);
+    }
+    .gold .element-surface {
+      background-image: linear-gradient(130deg, rgba(83,44,0,.8), rgba(255,231,115,.48), rgba(169,100,0,.74)), url("../SkillSync/Assets.xcassets/ElementMetalTexture.imageset/ElementMetalTexture.png");
+      background-blend-mode: color, normal;
+      box-shadow: 0 8px 24px rgba(255,195,36,.2);
+    }
+    .crystal .element-surface {
+      clip-path: polygon(50% 0, 88% 26%, 78% 84%, 42% 100%, 7% 68%, 14% 23%);
+      background-image: linear-gradient(145deg, rgba(255,255,255,.18), rgba(18,25,39,.54), rgba(91,159,205,.22)), url("../SkillSync/Assets.xcassets/ElementCrystalTexture.imageset/ElementCrystalTexture.png");
+      background-size: cover;
+      background-blend-mode: multiply, normal;
+      box-shadow: 0 8px 24px rgba(163,218,255,.17);
+    }
+    .liquid .element-surface { inset: 15% 8% 9%; overflow: hidden; border-radius: 7px; background: transparent; }
+    .liquid .element-surface::before {
+      content: "";
+      position: absolute;
+      left: -18%; right: -18%; bottom: -4%; height: 58%;
+      background-image: linear-gradient(90deg, rgba(58,0,0,.88), rgba(198,37,18,.55), rgba(95,5,0,.9)), url("../SkillSync/Assets.xcassets/HydrogenWaterTexture.imageset/HydrogenWaterTexture.png");
+      background-size: auto, 150% auto;
+      background-position: center, left center;
+      background-blend-mode: multiply, normal;
+      clip-path: polygon(0 17%, 18% 5%, 36% 17%, 55% 3%, 74% 15%, 100% 6%, 100% 100%, 0 100%);
+      animation: liquid-shift 2.8s ease-in-out infinite alternate;
+    }
+    .water .element-surface::before { background-image: linear-gradient(90deg, rgba(0,74,145,.25), rgba(23,216,245,.12), rgba(0,45,120,.28)), url("../SkillSync/Assets.xcassets/HydrogenWaterTexture.imageset/HydrogenWaterTexture.png"); background-blend-mode: color, normal; }
+    @keyframes liquid-shift { to { transform: translateX(8%) translateY(2px); } }
+    .gas .element-surface {
+      inset: 8% -8%;
+      background-image: radial-gradient(circle at 35% 50%, rgba(255,255,255,.72), rgba(23,216,245,.25) 28%, transparent 64%), url("../SkillSync/Assets.xcassets/ElementGasTexture.imageset/ElementGasTexture.png");
+      background-size: cover;
+      background-blend-mode: screen, screen;
+      mask-image: radial-gradient(ellipse at center, #000 22%, rgba(0,0,0,.78) 48%, transparent 74%);
+      -webkit-mask-image: radial-gradient(ellipse at center, #000 22%, rgba(0,0,0,.78) 48%, transparent 74%);
+      filter: blur(2px);
+      animation: gas-drift 3.4s ease-in-out infinite alternate;
+    }
+    @keyframes gas-drift { to { transform: translateX(10px) scale(1.12,.92); } }
+    .periodic-info {
+      min-height: 62px;
+      padding: 13px 15px;
+      border-radius: 15px;
+      color: var(--muted);
+      background: rgba(2,4,20,.42);
+      border: 1px solid rgba(255,255,255,.09);
+      font-size: clamp(13px, 1vw, 16px);
+      line-height: 1.4;
+    }
+    .periodic-info strong { color: white; }
+
     .controls {
       position: fixed;
       z-index: 20;
@@ -544,6 +670,9 @@
       .learning-path, .roadmap { gap: 18px; }
       .step, .step + .step { padding: 8px 14px; }
       .compare-grid { gap: 22px; }
+      .periodic-update { grid-template-columns: 1fr; align-content: center; }
+      .version-contrast, .interaction-tags { display: none; }
+      .periodic-demo { padding: 18px; }
       .hint { display: none; }
     }
 
@@ -556,7 +685,7 @@
   <canvas id="webgl-bg" aria-hidden="true"></canvas>
   <main class="deck" aria-label="SkillSync presentation">
     <section class="slide hero active" data-title="SkillSync">
-      <span class="slide-number">01 / 07</span>
+      <span class="slide-number">01 / 08</span>
       <div class="hero-copy">
         <span class="eyebrow">Building real understanding</span>
         <h1 class="gradient-text">Skill<br>Sync</h1>
@@ -569,7 +698,7 @@
     </section>
 
     <section class="slide purpose" data-title="What SkillSync does">
-      <span class="slide-number">02 / 07</span>
+      <span class="slide-number">02 / 08</span>
       <span class="eyebrow">What SkillSync does</span>
       <div>
         <h2>Practice reveals what students <span class="gradient-text">truly understand.</span></h2>
@@ -595,7 +724,7 @@
     </section>
 
     <section class="slide comparison" data-title="Why not just ask AI?">
-      <span class="slide-number">03 / 07</span>
+      <span class="slide-number">03 / 08</span>
       <div>
         <span class="eyebrow">Why not just ask AI?</span>
         <h2 style="margin-top:18px">Answers can finish a problem. <span class="gradient-text">Learning builds capability.</span></h2>
@@ -616,7 +745,7 @@
     </section>
 
     <section class="slide future" data-title="Future improvements">
-      <span class="slide-number">04 / 07</span>
+      <span class="slide-number">04 / 08</span>
       <span class="eyebrow">Future improvements</span>
       <div>
         <h2>The foundation is here. The next step is a <span class="gradient-text">stronger learning experience.</span></h2>
@@ -642,7 +771,7 @@
     </section>
 
     <section class="slide closing" data-title="Conclusion">
-      <span class="slide-number">05 / 07</span>
+      <span class="slide-number">05 / 08</span>
       <div class="closing-inner">
         <img class="closing-mark" src="../SkillSync/Assets.xcassets/SkillSyncLogo.imageset/SkillSyncSymbol.png" alt="SkillSync logo">
         <span class="eyebrow">The SkillSync promise</span>
@@ -653,7 +782,7 @@
     </section>
 
     <section class="slide update-one" data-title="Update number one">
-      <span class="slide-number">06 / 07</span>
+      <span class="slide-number">06 / 08</span>
       <div class="update-head">
         <span class="eyebrow">Update number one</span>
         <h2>Students can now choose <span class="gradient-text">Science</span> and see where their learning stands.</h2>
@@ -683,7 +812,7 @@
     </section>
 
     <section class="slide account-update" data-title="Accounts and personalization">
-      <span class="slide-number">07 / 07</span>
+      <span class="slide-number">07 / 08</span>
       <div class="account-visual" aria-hidden="true">
         <div class="account-orbit"></div>
         <div class="profile-core">
@@ -709,6 +838,42 @@
             <div><h3>Personalization comes next</h3><p>In a future update, saved learning history could guide practice toward each student’s needs.</p></div>
           </article>
         </div>
+      </div>
+    </section>
+
+    <section class="slide periodic-update" data-title="New improvement">
+      <span class="slide-number">08 / 08</span>
+      <div class="improvement-copy">
+        <span class="eyebrow">New improvement</span>
+        <h2>The periodic table is now an <span class="gradient-text">experience—not just a chart.</span></h2>
+        <p class="lead">The older version felt too bland and too similar to a normal interactive periodic table. The redesign makes science more visual, memorable, and inviting to explore.</p>
+        <div class="version-contrast">
+          <p class="version-note"><strong>Before:</strong> uniform tiles, basic colors, and familiar click-for-information behavior.</p>
+          <p class="version-note new"><strong>Now:</strong> flowing liquids, drifting gases, natural metal and crystal surfaces, animated categories, and richer element details.</p>
+        </div>
+        <div class="interaction-tags" aria-label="Available periodic table interactions">
+          <span>CLICK ELEMENTS</span><span>OPEN DESCRIPTIONS</span><span>EXPLORE TYPES</span><span>SCROLL THE TABLE</span>
+        </div>
+      </div>
+      <div class="periodic-demo" aria-label="Interactive preview of the improved periodic table">
+        <div class="demo-heading">
+          <div><small>LIVE APP ASSETS</small><h3>Materials feel different</h3></div>
+          <span class="eyebrow">Tap to explore</span>
+        </div>
+        <div class="type-chips">
+          <button class="type-chip" data-info-title="Element types" data-info="Type tabs explain families such as metals, liquids, gases, halogens, and noble gases.">Element types</button>
+          <button class="type-chip" data-info-title="Clickable descriptions" data-info="Every available element can open a focused description with its name, family, and real-world appearance.">Descriptions</button>
+          <button class="type-chip" data-info-title="Visual states" data-info="Motion and texture distinguish liquids, gases, metals, and crystals before the learner even opens a detail view.">Visual states</button>
+        </div>
+        <div class="element-gallery">
+          <button class="element-sample liquid water" data-info-title="Hydrogen · H" data-info="This sample uses the same animated water texture as the current SkillSync hydrogen study tile."><span class="element-surface"></span><b>H</b><small>HYDROGEN</small></button>
+          <button class="element-sample metal" data-info-title="Iron · Fe" data-info="Natural chunk geometry, grain, and directional light give the metal physical depth."><span class="element-surface"></span><b>Fe</b><small>IRON</small></button>
+          <button class="element-sample liquid" data-info-title="Bromine · Br" data-info="The liquid moves inside an invisible container while its surface line follows the flow."><span class="element-surface"></span><b>Br</b><small>BROMINE</small></button>
+          <button class="element-sample gas" data-info-title="Neon · Ne" data-info="A soft animated cloud spreads beyond the tile instead of behaving like a solid block."><span class="element-surface"></span><b>Ne</b><small>NEON</small></button>
+          <button class="element-sample metal gold" data-info-title="Gold · Au" data-info="Gold uses a warm metallic surface inspired by the color of a fresh real-world sample."><span class="element-surface"></span><b>Au</b><small>GOLD</small></button>
+          <button class="element-sample crystal" data-info-title="Carbon · C" data-info="This specimen uses SkillSync’s real crystal texture inside the same irregular material shape used by the app."><span class="element-surface"></span><b>C</b><small>CARBON</small></button>
+        </div>
+        <div class="periodic-info" id="periodic-info"><strong>Try the preview.</strong> Click an element or interaction above to see what learners can explore.</div>
       </div>
     </section>
   </main>
@@ -940,8 +1105,18 @@
     const prev = document.getElementById('prev');
     const next = document.getElementById('next');
     const transitionFlare = document.getElementById('transition-flare');
+    const periodicInfo = document.getElementById('periodic-info');
+    const periodicControls = [...document.querySelectorAll('.type-chip, .element-sample')];
     let index = 0;
     let flareRun = 0;
+
+    periodicControls.forEach(control => {
+      control.addEventListener('click', () => {
+        periodicControls.forEach(item => item.classList.remove('selected'));
+        control.classList.add('selected');
+        periodicInfo.innerHTML = `<strong>${control.dataset.infoTitle}</strong> — ${control.dataset.info}`;
+      });
+    });
 
     slides.forEach((slide, i) => {
       const dot = document.createElement('button');
