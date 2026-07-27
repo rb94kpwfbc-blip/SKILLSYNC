@@ -625,6 +625,229 @@
     }
     .periodic-info strong { color: white; }
 
+    .demo-update {
+      grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr);
+      align-items: center;
+      gap: clamp(30px, 4.5vw, 72px);
+    }
+    .demo-copy { display: grid; gap: 20px; align-content: center; }
+    .demo-copy h2 { max-width: 670px; }
+    .demo-points { display: grid; gap: 12px; margin-top: 4px; }
+    .demo-point {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: clamp(14px, 1.1vw, 17px);
+      font-weight: 700;
+    }
+    .demo-point span {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: white;
+      background: linear-gradient(135deg, rgba(23,216,245,.28), rgba(115,62,255,.38));
+      border: 1px solid rgba(255,255,255,.13);
+    }
+    .demo-video-shell {
+      position: relative;
+      padding: 11px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(23,216,245,.28), rgba(255,255,255,.08) 42%, rgba(115,62,255,.35));
+      box-shadow: 0 28px 80px rgba(0,0,0,.42), 0 0 55px rgba(23,216,245,.1);
+      overflow: hidden;
+    }
+    .demo-video-shell::before {
+      content: "";
+      position: absolute;
+      inset: -45%;
+      background: conic-gradient(from 90deg, transparent, rgba(23,216,245,.22), transparent 28%, rgba(115,62,255,.23), transparent 62%);
+      animation: demo-aurora 9s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes demo-aurora { to { transform: rotate(1turn); } }
+    .demo-video {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      max-height: 68vh;
+      aspect-ratio: 16 / 9;
+      object-fit: contain;
+      border-radius: 19px;
+      background: #01030d;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .demo-badge {
+      position: absolute;
+      z-index: 2;
+      top: 24px;
+      left: 24px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      color: white;
+      background: rgba(2,4,20,.72);
+      border: 1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(14px);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .lessons-learned {
+      grid-template-columns: minmax(0, .86fr) minmax(420px, 1.14fr);
+      align-items: center;
+      gap: clamp(36px, 6vw, 92px);
+    }
+    .lesson-copy { display: grid; gap: 20px; align-content: center; }
+    .lesson-copy h2 { max-width: 760px; }
+    .reflection-note {
+      max-width: 670px;
+      padding: 17px 19px;
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 16px 16px 0;
+      color: var(--muted);
+      background: linear-gradient(90deg, rgba(23,216,245,.09), rgba(23,216,245,0));
+      font-size: clamp(14px, 1.12vw, 18px);
+      line-height: 1.55;
+    }
+    .lesson-orbit {
+      position: relative;
+      min-height: min(62vh, 570px);
+      display: grid;
+      place-items: center;
+    }
+    .lesson-core {
+      position: relative;
+      z-index: 2;
+      width: clamp(150px, 18vw, 235px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      padding: 26px;
+      border-radius: 50%;
+      text-align: center;
+      background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.18), rgba(23,216,245,.2) 24%, rgba(115,62,255,.29) 58%, rgba(4,8,27,.86));
+      border: 1px solid rgba(255,255,255,.17);
+      box-shadow: 0 0 80px rgba(23,216,245,.18), inset 0 0 34px rgba(255,255,255,.08);
+      font-size: clamp(19px, 2vw, 29px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -.04em;
+    }
+    .lesson-ring {
+      position: absolute;
+      width: min(43vw, 490px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow: inset 0 0 60px rgba(115,62,255,.05);
+      animation: lesson-spin 22s linear infinite;
+    }
+    .lesson-ring::before,
+    .lesson-ring::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 22px var(--cyan);
+    }
+    .lesson-ring::before { top: 12%; left: 15%; }
+    .lesson-ring::after { right: 8%; bottom: 22%; background: var(--purple); box-shadow: 0 0 22px var(--purple); }
+    @keyframes lesson-spin { to { transform: rotate(1turn); } }
+    .lesson-card {
+      position: absolute;
+      z-index: 3;
+      width: clamp(175px, 17vw, 235px);
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(4,8,27,.69);
+      border: 1px solid rgba(255,255,255,.11);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 48px rgba(0,0,0,.26);
+    }
+    .lesson-card strong { display: block; color: white; font-size: clamp(15px, 1.2vw, 19px); margin-bottom: 5px; }
+    .lesson-card p { color: var(--muted); font-size: clamp(12px, .9vw, 14px); line-height: 1.45; }
+    .lesson-card.one { top: 5%; right: 3%; }
+    .lesson-card.two { left: 0; bottom: 11%; }
+    .lesson-card.three { right: 0; bottom: 1%; }
+
+    .next-roadmap { align-content: center; gap: clamp(25px, 3vw, 42px); }
+    .roadmap-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(260px, .55fr);
+      gap: clamp(28px, 5vw, 80px);
+      align-items: end;
+    }
+    .roadmap-head .lead { max-width: 540px; justify-self: end; }
+    .future-track {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(18px, 2.4vw, 34px);
+    }
+    .future-track::before {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      top: 30px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), rgba(255,255,255,.25), var(--purple));
+      box-shadow: 0 0 24px rgba(23,216,245,.3);
+    }
+    .future-stop {
+      position: relative;
+      z-index: 1;
+      min-height: 260px;
+      padding: 75px clamp(20px, 2.2vw, 32px) 26px;
+      border-radius: 24px;
+      background: linear-gradient(150deg, rgba(255,255,255,.085), rgba(255,255,255,.025));
+      border: 1px solid rgba(255,255,255,.1);
+      overflow: hidden;
+    }
+    .future-stop::before {
+      content: attr(data-step);
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      color: #020617;
+      background: linear-gradient(135deg, var(--cyan), #8ff4ff);
+      box-shadow: 0 0 25px rgba(23,216,245,.42);
+      font-size: 12px;
+      font-weight: 950;
+    }
+    .future-stop:nth-child(2)::before { color: white; background: linear-gradient(135deg, #3c86ff, var(--purple)); box-shadow: 0 0 25px rgba(115,62,255,.42); }
+    .future-stop:nth-child(3)::before { color: white; background: linear-gradient(135deg, var(--purple), #d447ff); box-shadow: 0 0 25px rgba(185,67,255,.42); }
+    .future-stop small { color: var(--cyan); font-weight: 900; letter-spacing: .13em; }
+    .future-stop h3 { margin: 12px 0 9px; font-size: clamp(20px, 2vw, 29px); }
+    .future-stop p { color: var(--muted); font-size: clamp(14px, 1.05vw, 17px); line-height: 1.55; }
+    .future-stop .status {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.07);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .1em;
+    }
+
     .controls {
       position: fixed;
       z-index: 20;
@@ -671,6 +894,19 @@
       .step, .step + .step { padding: 8px 14px; }
       .compare-grid { gap: 22px; }
       .periodic-update { grid-template-columns: 1fr; align-content: center; }
+      .demo-update { grid-template-columns: 1fr; align-content: center; }
+      .demo-copy { gap: 12px; }
+      .demo-points { display: none; }
+      .demo-video { max-height: 52vh; }
+      .lessons-learned { grid-template-columns: 1fr; align-content: center; }
+      .lesson-orbit { min-height: 39vh; }
+      .lesson-ring { width: min(72vw, 390px); }
+      .lesson-card { width: min(38vw, 210px); }
+      .roadmap-head { grid-template-columns: 1fr; gap: 12px; }
+      .roadmap-head .lead { justify-self: start; }
+      .future-track { grid-template-columns: 1fr; }
+      .future-track::before { display: none; }
+      .future-stop { min-height: 220px; padding-inline: 18px; }
       .version-contrast, .interaction-tags { display: none; }
       .periodic-demo { padding: 18px; }
       .hint { display: none; }
@@ -685,7 +921,7 @@
   <canvas id="webgl-bg" aria-hidden="true"></canvas>
   <main class="deck" aria-label="SkillSync presentation">
     <section class="slide hero active" data-title="SkillSync">
-      <span class="slide-number">01 / 08</span>
+      <span class="slide-number">01 / 11</span>
       <div class="hero-copy">
         <span class="eyebrow">Building real understanding</span>
         <h1 class="gradient-text">Skill<br>Sync</h1>
@@ -698,7 +934,7 @@
     </section>
 
     <section class="slide purpose" data-title="What SkillSync does">
-      <span class="slide-number">02 / 08</span>
+      <span class="slide-number">02 / 11</span>
       <span class="eyebrow">What SkillSync does</span>
       <div>
         <h2>Practice reveals what students <span class="gradient-text">truly understand.</span></h2>
@@ -724,7 +960,7 @@
     </section>
 
     <section class="slide comparison" data-title="Why not just ask AI?">
-      <span class="slide-number">03 / 08</span>
+      <span class="slide-number">03 / 11</span>
       <div>
         <span class="eyebrow">Why not just ask AI?</span>
         <h2 style="margin-top:18px">Answers can finish a problem. <span class="gradient-text">Learning builds capability.</span></h2>
@@ -745,7 +981,7 @@
     </section>
 
     <section class="slide future" data-title="Future improvements">
-      <span class="slide-number">04 / 08</span>
+      <span class="slide-number">04 / 11</span>
       <span class="eyebrow">Future improvements</span>
       <div>
         <h2>The foundation is here. The next step is a <span class="gradient-text">stronger learning experience.</span></h2>
@@ -771,7 +1007,7 @@
     </section>
 
     <section class="slide closing" data-title="Conclusion">
-      <span class="slide-number">05 / 08</span>
+      <span class="slide-number">05 / 11</span>
       <div class="closing-inner">
         <img class="closing-mark" src="../SkillSync/Assets.xcassets/SkillSyncLogo.imageset/SkillSyncSymbol.png" alt="SkillSync logo">
         <span class="eyebrow">The SkillSync promise</span>
@@ -782,7 +1018,7 @@
     </section>
 
     <section class="slide update-one" data-title="Update number one">
-      <span class="slide-number">06 / 08</span>
+      <span class="slide-number">06 / 11</span>
       <div class="update-head">
         <span class="eyebrow">Update number one</span>
         <h2>Students can now choose <span class="gradient-text">Science</span> and see where their learning stands.</h2>
@@ -812,7 +1048,7 @@
     </section>
 
     <section class="slide account-update" data-title="Accounts and personalization">
-      <span class="slide-number">07 / 08</span>
+      <span class="slide-number">07 / 11</span>
       <div class="account-visual" aria-hidden="true">
         <div class="account-orbit"></div>
         <div class="profile-core">
@@ -842,7 +1078,7 @@
     </section>
 
     <section class="slide periodic-update" data-title="New improvement">
-      <span class="slide-number">08 / 08</span>
+      <span class="slide-number">08 / 11</span>
       <div class="improvement-copy">
         <span class="eyebrow">New improvement</span>
         <h2>The periodic table is now an <span class="gradient-text">experience—not just a chart.</span></h2>
@@ -874,6 +1110,75 @@
           <button class="element-sample crystal" data-info-title="Carbon · C" data-info="This specimen uses SkillSync’s real crystal texture inside the same irregular material shape used by the app."><span class="element-surface"></span><b>C</b><small>CARBON</small></button>
         </div>
         <div class="periodic-info" id="periodic-info"><strong>Try the preview.</strong> Click an element or interaction above to see what learners can explore.</div>
+      </div>
+    </section>
+
+    <section class="slide demo-update" data-title="App demo">
+      <span class="slide-number">09 / 11</span>
+      <div class="demo-copy">
+        <span class="eyebrow">See SkillSync in action</span>
+        <h2>A guided look at the <span class="gradient-text">learning experience.</span></h2>
+        <p class="lead">This live product recording shows how students move through SkillSync, explore science, and interact with the visual periodic table.</p>
+        <div class="demo-points">
+          <p class="demo-point"><span>01</span> Navigate the student learning space</p>
+          <p class="demo-point"><span>02</span> Explore topics and progress</p>
+          <p class="demo-point"><span>03</span> Open the interactive periodic table</p>
+        </div>
+      </div>
+      <div class="demo-video-shell">
+        <span class="demo-badge">Product demo</span>
+        <video class="demo-video" controls preload="metadata" playsinline aria-label="SkillSync app screen recording">
+          <source src="skillsync-demo.m4v" type="video/mp4">
+          Your browser cannot play this recording. Open skillsync-demo.m4v from the presentation folder instead.
+        </video>
+      </div>
+    </section>
+
+    <section class="slide lessons-learned" data-title="What I learned">
+      <span class="slide-number">10 / 11</span>
+      <div class="lesson-copy">
+        <span class="eyebrow">What I learned</span>
+        <h2>A successful app needs something <span class="gradient-text">people cannot ignore.</span></h2>
+        <p class="lead">Good execution is not enough by itself. Ideas can be copied, competitors can move quickly, and a product needs distinctive value to stay ahead.</p>
+        <p class="reflection-note"><strong>My honest takeaway:</strong> SkillSync is not fully there yet. Its strongest opportunity is to create special learning experiences faster—experiences that feel unmistakably its own.</p>
+      </div>
+      <div class="lesson-orbit" aria-label="Three lessons for building a successful app">
+        <div class="lesson-ring" aria-hidden="true"></div>
+        <div class="lesson-core">Build what makes you different.</div>
+        <article class="lesson-card one"><strong>Be unique</strong><p>Give students a reason to choose SkillSync instead of a familiar alternative.</p></article>
+        <article class="lesson-card two"><strong>Move quickly</strong><p>Turn the best ideas into polished features before the opportunity passes.</p></article>
+        <article class="lesson-card three"><strong>Keep improving</strong><p>Standing out is ongoing work—not a single update or visual effect.</p></article>
+      </div>
+    </section>
+
+    <section class="slide next-roadmap" data-title="Future roadmap">
+      <span class="slide-number">11 / 11</span>
+      <div class="roadmap-head">
+        <div>
+          <span class="eyebrow">The future roadmap</span>
+          <h2 style="margin-top:18px">Grow the subjects. Refine the experience. <span class="gradient-text">Keep moving forward.</span></h2>
+        </div>
+        <p class="lead">The next updates will broaden what students can learn while making every screen clearer and more polished.</p>
+      </div>
+      <div class="future-track">
+        <article class="future-stop" data-step="01">
+          <small>EXPAND</small>
+          <h3>More school topics</h3>
+          <p>Add high-value topics from the subjects students study most, building beyond the current Science experience.</p>
+          <span class="status">NEXT UP</span>
+        </article>
+        <article class="future-stop" data-step="02">
+          <small>REFINE</small>
+          <h3>Update the UI</h3>
+          <p>Improve navigation, clarity, consistency, accessibility, and the overall feeling of using SkillSync.</p>
+          <span class="status">IN DEVELOPMENT</span>
+        </article>
+        <article class="future-stop" data-step="03">
+          <small>DIFFERENTIATE</small>
+          <h3>Create signature learning</h3>
+          <p>Turn active recall and visual exploration into experiences that are memorable, useful, and uniquely SkillSync.</p>
+          <span class="status">LONG-TERM GOAL</span>
+        </article>
       </div>
     </section>
   </main>
@@ -1134,6 +1439,7 @@
       const direction = nextIndex > index ? 1 : -1;
       const previousSlide = slides[index];
       const incomingSlide = slides[nextIndex];
+      previousSlide.querySelectorAll('video').forEach(video => video.pause());
       slides.forEach(slide => {
         slide.classList.remove('active', 'leaving');
         if (slide !== previousSlide && slide !== incomingSlide) {
@@ -1169,6 +1475,7 @@
     prev.addEventListener('click', () => show(index - 1));
     next.addEventListener('click', () => show(index + 1));
     document.addEventListener('keydown', event => {
+      if (event.target instanceof HTMLElement && event.target.closest('video')) return;
       if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); show(index + 1); }
       if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); show(index - 1); }
       if (event.key === 'Home') show(0);
