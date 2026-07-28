@@ -182,6 +182,13 @@ struct AuthenticationView: View {
                                             }
                                         }
                                         .clipShape(RoundedRectangle(cornerRadius: 13))
+                                        .overlay {
+                                            AuroraConstellationOverlay(
+                                                cornerRadius: 13,
+                                                intensity: mode == option ? 0.85 : 0.18,
+                                                isActive: mode == option
+                                            )
+                                        }
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -445,20 +452,31 @@ struct LiquidScreenTransition: View, Animatable {
     }
 }
 
+struct SkillSyncAnimationsEnabledKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var skillSyncAnimationsEnabled: Bool {
+        get { self[SkillSyncAnimationsEnabledKey.self] }
+        set { self[SkillSyncAnimationsEnabledKey.self] = newValue }
+    }
+}
+
 struct HomeView: View {
     let logout: () -> Void
     @State private var selectedTab = SkillSyncTab.home
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        ZStack {
             NavigationStack {
                 ZStack {
-                    AmbientBackgroundView(isAnimated: true)
+                    AmbientBackgroundView(isAnimated: selectedTab == .home)
 
                     GlowingWaveOverlay(
                         intensity: 0.38,
                         verticalOffset: 110,
-                        isAnimated: true
+                        isAnimated: selectedTab == .home
                     )
 
                     ScrollView {
@@ -519,29 +537,240 @@ struct HomeView: View {
                     }
                 }
             }
-            .tabItem {
-                Label("Home", systemImage: "house.fill")
-            }
-            .tag(SkillSyncTab.home)
+            .opacity(selectedTab == .home ? 1 : 0)
+            .allowsHitTesting(selectedTab == .home)
+            .zIndex(selectedTab == .home ? 1 : 0)
+            .environment(
+                \.skillSyncAnimationsEnabled,
+                selectedTab == .home
+            )
 
             LearningProgressView()
-                .tabItem {
-                    Label("Progress", systemImage: "chart.bar.fill")
-                }
-                .tag(SkillSyncTab.progress)
+                .opacity(selectedTab == .progress ? 1 : 0)
+                .allowsHitTesting(selectedTab == .progress)
+                .zIndex(selectedTab == .progress ? 1 : 0)
+                .environment(
+                    \.skillSyncAnimationsEnabled,
+                    selectedTab == .progress
+                )
+
+            TutorView()
+                .opacity(selectedTab == .tutor ? 1 : 0)
+                .allowsHitTesting(selectedTab == .tutor)
+                .zIndex(selectedTab == .tutor ? 1 : 0)
+                .environment(
+                    \.skillSyncAnimationsEnabled,
+                    selectedTab == .tutor
+                )
         }
         .tint(.cyan)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            AuroraTabBar(selection: $selectedTab)
+        }
         .preferredColorScheme(.dark)
     }
 }
 
-enum SkillSyncTab {
+enum SkillSyncTab: CaseIterable, Identifiable {
     case home
     case progress
+    case tutor
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .home: "Home"
+        case .progress: "Progress"
+        case .tutor: "AI Tutor"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .home: "house.fill"
+        case .progress: "chart.bar.fill"
+        case .tutor: "sparkles"
+        }
+    }
+}
+
+struct AuroraTabBar: View {
+    @Binding var selection: SkillSyncTab
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(SkillSyncTab.allCases) { tab in
+                let isSelected = selection == tab
+
+                Button {
+                    withAnimation(.spring(response: 0.42, dampingFraction: 0.78)) {
+                        selection = tab
+                    }
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: tab.systemImage)
+                            .font(.system(size: 18, weight: .bold))
+
+                        Text(tab.title)
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(
+                        isSelected ? .white : .white.opacity(0.48)
+                    )
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        isSelected
+                            ? Color.cyan.opacity(0.09)
+                            : Color.clear,
+                        in: RoundedRectangle(cornerRadius: 17)
+                    )
+                    .overlay {
+                        AuroraConstellationOverlay(
+                            cornerRadius: 17,
+                            intensity: isSelected ? 1 : 0.3,
+                            isActive: isSelected
+                        )
+                    }
+                    .scaleEffect(isSelected ? 1 : 0.94)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(tab.title)
+            }
+        }
+        .padding(7)
+        .background(
+            .ultraThinMaterial,
+            in: RoundedRectangle(cornerRadius: 24)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            .cyan.opacity(0.48),
+                            .blue.opacity(0.18),
+                            .purple.opacity(0.45)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    lineWidth: 1
+                )
+        }
+        .shadow(color: .cyan.opacity(0.16), radius: 20, y: 8)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 8)
+    }
+}
+
+struct AuroraConstellationOverlay: View {
+    let cornerRadius: CGFloat
+    var intensity: Double = 0.7
+    var isActive: Bool = true
+    var framesPerSecond: Double = 10
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.skillSyncAnimationsEnabled) private var animationsEnabled
+
+    var body: some View {
+        TimelineView(
+            .animation(
+                minimumInterval: 1 / framesPerSecond,
+                paused: !isActive || reduceMotion || !animationsEnabled
+            )
+        ) { timeline in
+            let time = reduceMotion || !isActive || !animationsEnabled
+                ? 0
+                : timeline.date.timeIntervalSinceReferenceDate
+
+            Canvas { context, size in
+                let colors: [Color] = [.cyan, .blue, .purple]
+
+                for line in 0..<3 {
+                    let phase = time * (0.42 + Double(line) * 0.08)
+                        + Double(line) * 2.1
+                    let base = size.height
+                        * (0.28 + CGFloat(line) * 0.22)
+                    let amplitude = max(3, size.height * (0.08 + CGFloat(line) * 0.018))
+                    var path = Path()
+
+                    for x in stride(from: -4.0, through: size.width + 4, by: 3) {
+                        let y = base
+                            + sin(x * 0.038 + phase) * amplitude
+                            + sin(x * 0.014 - phase * 0.7) * amplitude * 0.52
+
+                        if x <= -3 {
+                            path.move(to: CGPoint(x: x, y: y))
+                        } else {
+                            path.addLine(to: CGPoint(x: x, y: y))
+                        }
+                    }
+
+                    context.opacity = intensity * (isActive ? 0.5 : 0.18)
+                    context.stroke(
+                        path,
+                        with: .linearGradient(
+                            Gradient(colors: [
+                                colors[line].opacity(0.08),
+                                colors[line],
+                                colors[(line + 1) % colors.count],
+                                colors[line].opacity(0.05)
+                            ]),
+                            startPoint: CGPoint(x: 0, y: base),
+                            endPoint: CGPoint(x: size.width, y: base)
+                        ),
+                        style: StrokeStyle(
+                            lineWidth: isActive ? 1.25 : 0.65,
+                            lineCap: .round
+                        )
+                    )
+
+                    let travel = (
+                        time * (0.075 + Double(line) * 0.018)
+                            + Double(line) * 0.29
+                    ).truncatingRemainder(dividingBy: 1)
+                    let starX = CGFloat(travel) * size.width
+                    let starY = base
+                        + sin(starX * 0.038 + phase) * amplitude
+                        + sin(starX * 0.014 - phase * 0.7) * amplitude * 0.52
+
+                    context.opacity = intensity * (isActive ? 0.9 : 0.28)
+                    context.fill(
+                        Path(
+                            ellipseIn: CGRect(
+                                x: starX - 3.4,
+                                y: starY - 3.4,
+                                width: 6.8,
+                                height: 6.8
+                            )
+                        ),
+                        with: .color(colors[line].opacity(0.22))
+                    )
+                    context.fill(
+                        Path(
+                            ellipseIn: CGRect(
+                                x: starX - 1.15,
+                                y: starY - 1.15,
+                                width: 2.3,
+                                height: 2.3
+                            )
+                        ),
+                        with: .color(.white)
+                    )
+                }
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
 }
 
 struct LearningProgressView: View {
     @State private var selectedTopic = ProgressTopic.science
+    @Environment(\.skillSyncAnimationsEnabled) private var animationsEnabled
 
     private var units: [LearningUnit] {
         if selectedTopic == .science {
@@ -577,7 +806,7 @@ struct LearningProgressView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AmbientBackgroundView(isAnimated: true)
+                AmbientBackgroundView(isAnimated: animationsEnabled)
 
                 ScrollView {
                     VStack(spacing: 22) {
@@ -611,8 +840,21 @@ struct LearningProgressView: View {
                                         }
                                         .clipShape(Capsule())
                                         .overlay {
-                                            Capsule()
-                                                .stroke(.white.opacity(0.1), lineWidth: 1)
+                                            ZStack {
+                                                Capsule()
+                                                    .stroke(
+                                                        selectedTopic == topic
+                                                            ? .cyan.opacity(0.42)
+                                                            : .white.opacity(0.1),
+                                                        lineWidth: 1
+                                                    )
+
+                                                AuroraConstellationOverlay(
+                                                    cornerRadius: 999,
+                                                    intensity: selectedTopic == topic ? 0.95 : 0.24,
+                                                    isActive: selectedTopic == topic
+                                                )
+                                            }
                                         }
                                     }
                                     .buttonStyle(.plain)
@@ -738,9 +980,29 @@ struct LearningUnitRow: View {
         }
         .padding(15)
         .background(
-            Color.white.opacity(0.06),
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.07),
+                    Color.cyan.opacity(0.035),
+                    Color.purple.opacity(0.035)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
             in: RoundedRectangle(cornerRadius: 17)
         )
+        .overlay {
+            ZStack {
+                RoundedRectangle(cornerRadius: 17)
+                    .stroke(.white.opacity(0.09), lineWidth: 1)
+
+                AuroraConstellationOverlay(
+                    cornerRadius: 17,
+                    intensity: showsChevron ? 0.72 : 0.3,
+                    isActive: showsChevron
+                )
+            }
+        }
     }
 }
 
@@ -826,8 +1088,19 @@ struct ExpandableLearningTab: View {
             in: RoundedRectangle(cornerRadius: 20)
         )
         .overlay {
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(accent.opacity(isExpanded ? 0.4 : 0.2), lineWidth: 1)
+            ZStack {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        accent.opacity(isExpanded ? 0.48 : 0.22),
+                        lineWidth: 1
+                    )
+
+                AuroraConstellationOverlay(
+                    cornerRadius: 20,
+                    intensity: isExpanded ? 0.9 : 0.38,
+                    isActive: isExpanded
+                )
+            }
         }
         .shadow(color: accent.opacity(isExpanded ? 0.18 : 0.08), radius: 18, y: 8)
         .animation(.spring(response: 0.45, dampingFraction: 0.82), value: isExpanded)
@@ -913,50 +1186,6 @@ struct BubbleTitle: View {
         Text(text)
             .font(.custom("Arial Rounded MT Bold", fixedSize: 48))
             .tracking(-1.8)
-    }
-}
-
-struct TutorPlaceholderView: View {
-    var body: some View {
-        ZStack {
-            AmbientBackgroundView(isAnimated: true)
-
-            GlowingWaveOverlay(
-                intensity: 0.46,
-                verticalOffset: -120,
-                isAnimated: true
-            )
-
-            VStack(spacing: 18) {
-                Image(systemName: "person.2.wave.2.fill")
-                    .font(.system(size: 54, weight: .medium))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.cyan, .blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .shadow(color: .cyan.opacity(0.4), radius: 18)
-
-                Text("Tutor list goes here")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
-
-                Text("Placeholder content")
-                    .foregroundStyle(.white.opacity(0.58))
-
-            }
-            .padding(32)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28))
-            .overlay {
-                RoundedRectangle(cornerRadius: 28)
-                    .stroke(.white.opacity(0.14), lineWidth: 1)
-            }
-            .shadow(color: .purple.opacity(0.2), radius: 30, y: 14)
-            .padding()
-        }
-        .navigationTitle("Find a Tutor")
     }
 }
 

@@ -173,7 +173,12 @@ struct AmbientBackgroundView: View {
     let isAnimated: Bool
 
     var body: some View {
-        TimelineView(.animation) { timeline in
+        TimelineView(
+            .animation(
+                minimumInterval: 1 / 10,
+                paused: !isAnimated
+            )
+        ) { timeline in
             background(at: animationTime(for: timeline.date))
         }
         .ignoresSafeArea()
@@ -188,34 +193,52 @@ struct AmbientBackgroundView: View {
                     Color.skillSyncBackground
 
                     Circle()
-                        .fill(.cyan.opacity(0.16))
+                        .fill(
+                            RadialGradient(
+                                colors: [.cyan.opacity(0.22), .cyan.opacity(0.06), .clear],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: width * 0.45
+                            )
+                        )
                         .frame(width: width * 0.9)
-                        .blur(radius: 85)
                         .offset(
                             x: -width * 0.42 + CGFloat(sin(time * 0.23)) * 38,
                             y: -height * 0.3 + CGFloat(cos(time * 0.19)) * 45
                         )
 
                     Circle()
-                        .fill(.purple.opacity(0.18))
+                        .fill(
+                            RadialGradient(
+                                colors: [.purple.opacity(0.24), .purple.opacity(0.07), .clear],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: width * 0.42
+                            )
+                        )
                         .frame(width: width * 0.82)
-                        .blur(radius: 95)
                         .offset(
                             x: width * 0.45 + CGFloat(cos(time * 0.17)) * 42,
                             y: height * 0.28 + CGFloat(sin(time * 0.21)) * 52
                         )
 
                     Circle()
-                        .fill(.blue.opacity(0.1))
+                        .fill(
+                            RadialGradient(
+                                colors: [.blue.opacity(0.16), .blue.opacity(0.04), .clear],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: width * 0.34
+                            )
+                        )
                         .frame(width: width * 0.68)
-                        .blur(radius: 75)
                         .offset(
                             x: CGFloat(sin(time * 0.14)) * width * 0.2,
                             y: CGFloat(cos(time * 0.16)) * height * 0.18
                         )
 
                     Canvas { context, size in
-                        for particle in 0..<24 {
+                        for particle in 0..<16 {
                             let seed = Double(particle)
                             let x = size.width * CGFloat(
                                 (sin(seed * 12.9898) + 1) / 2
@@ -264,7 +287,12 @@ struct FluidLogoView: View {
     let isAnimated: Bool
 
     var body: some View {
-        TimelineView(.animation) { timeline in
+        TimelineView(
+            .animation(
+                minimumInterval: 1 / 10,
+                paused: !isAnimated
+            )
+        ) { timeline in
             let time = animationTime(for: timeline.date)
 
             ZStack {
@@ -369,7 +397,7 @@ struct GlowingWaveOverlay: View {
                     )
                 }
             }
-            .blur(radius: 4)
+            .blur(radius: 2.5)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
