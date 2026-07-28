@@ -6,3 +6,8 @@ SkillSync/Assets.xcassets/SkillSyncLogo.imageset/8607c18d-a68d-43f3-bb1a-dff0adb
 
 # Oversized original demo; the compressed .m4v is published instead
 presentation/skillsync-demo.mov
+
+# Local tutor secrets and generated Python files
+server/.env
+server/*.log
+server/__pycache__/

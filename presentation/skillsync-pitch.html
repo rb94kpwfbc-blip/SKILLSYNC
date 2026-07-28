@@ -848,6 +848,240 @@
       letter-spacing: .1em;
     }
 
+    /* 12 */
+    .ai-tutor-update {
+      grid-template-columns: minmax(0, .9fr) minmax(420px, 1.1fr);
+      align-items: center;
+      gap: clamp(38px, 6vw, 92px);
+    }
+    .ai-tutor-copy { display: grid; gap: 20px; align-content: center; }
+    .ai-tutor-copy h2 { max-width: 760px; }
+    .ai-capabilities { display: grid; gap: 13px; margin-top: 5px; }
+    .ai-capability {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 13px;
+      align-items: start;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .ai-capability > span {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: white;
+      background: linear-gradient(135deg, rgba(23,216,245,.26), rgba(115,62,255,.34));
+      border: 1px solid rgba(255,255,255,.13);
+      box-shadow: 0 0 22px rgba(23,216,245,.1);
+      font-size: 15px;
+      font-weight: 950;
+    }
+    .ai-capability h3 { font-size: clamp(19px, 1.65vw, 27px); letter-spacing: -.025em; }
+    .ai-capability p { margin-top: 4px; color: var(--muted); font-size: clamp(13px, 1vw, 16px); line-height: 1.46; }
+    .tutor-chat {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 16px;
+      min-height: min(64vh, 590px);
+      padding: clamp(19px, 2.2vw, 30px);
+      border-radius: 30px;
+      background: linear-gradient(145deg, rgba(5,11,35,.88), rgba(14,16,51,.76));
+      border: 1px solid rgba(23,216,245,.27);
+      box-shadow: 0 30px 90px rgba(0,0,0,.36), inset 0 0 70px rgba(39,120,255,.05);
+      overflow: hidden;
+    }
+    .tutor-chat::before {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      right: -90px;
+      top: -110px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(115,62,255,.23), transparent 68%);
+      pointer-events: none;
+    }
+    .tutor-chat-head {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--line);
+    }
+    .tutor-avatar {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: linear-gradient(135deg, var(--cyan), var(--blue), var(--purple));
+      box-shadow: 0 0 24px rgba(23,216,245,.25);
+      font-size: 18px;
+    }
+    .tutor-chat-head strong { display: block; font-size: 17px; }
+    .tutor-chat-head small { display: block; margin-top: 3px; color: var(--cyan); font-weight: 800; letter-spacing: .04em; }
+    .chat-messages { position: relative; display: grid; align-content: center; gap: 11px; }
+    .chat-bubble {
+      max-width: 83%;
+      padding: 12px 15px;
+      border-radius: 17px;
+      color: rgba(255,255,255,.88);
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.09);
+      font-size: clamp(13px, 1vw, 16px);
+      line-height: 1.45;
+    }
+    .chat-bubble.student {
+      justify-self: end;
+      background: linear-gradient(135deg, rgba(39,120,255,.64), rgba(115,62,255,.62));
+      border-color: rgba(255,255,255,.15);
+    }
+    .chat-bubble strong { color: var(--cyan); }
+    .chat-prompts { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chat-prompts span {
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: rgba(255,255,255,.7);
+      background: rgba(23,216,245,.07);
+      border: 1px solid rgba(23,216,245,.17);
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: .035em;
+    }
+    .chat-composer {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 40px;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 8px 8px 14px;
+      border-radius: 18px;
+      color: rgba(255,255,255,.4);
+      background: rgba(0,0,0,.24);
+      border: 1px solid rgba(255,255,255,.13);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .chat-send {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: linear-gradient(135deg, var(--cyan), var(--blue), var(--purple));
+      box-shadow: 0 0 18px rgba(23,216,245,.2);
+      font-size: 18px;
+    }
+
+    /* 13 */
+    .name-story {
+      grid-template-columns: minmax(0, .82fr) minmax(470px, 1.18fr);
+      align-items: center;
+      gap: clamp(42px, 6vw, 96px);
+    }
+    .name-copy { display: grid; gap: 22px; align-content: center; }
+    .name-copy h2 { max-width: 730px; }
+    .name-definition {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 5px;
+    }
+    .name-part {
+      padding: 17px 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .name-part strong {
+      display: block;
+      font-family: Futura, "Avenir Next Condensed", "Helvetica Neue", sans-serif;
+      font-size: clamp(24px, 2.5vw, 39px);
+      letter-spacing: -.04em;
+    }
+    .name-part:first-child strong { color: var(--cyan); }
+    .name-part:last-child strong { color: #a888ff; }
+    .name-part p { margin-top: 6px; color: var(--muted); font-size: clamp(13px, 1vw, 16px); line-height: 1.45; }
+    .sync-map {
+      position: relative;
+      min-height: min(62vh, 570px);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      gap: clamp(16px, 2vw, 30px);
+    }
+    .sync-map::before {
+      content: "";
+      position: absolute;
+      left: 13%;
+      right: 13%;
+      top: 50%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple));
+      box-shadow: 0 0 24px rgba(23,216,245,.35);
+    }
+    .sync-stage {
+      position: relative;
+      z-index: 2;
+      min-height: 230px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 14px;
+      padding: 25px 18px;
+      border-radius: 25px;
+      text-align: center;
+      background: linear-gradient(150deg, rgba(255,255,255,.085), rgba(255,255,255,.025));
+      border: 1px solid rgba(255,255,255,.11);
+      box-shadow: 0 22px 65px rgba(0,0,0,.25);
+    }
+    .sync-stage.ai-stage {
+      transform: translateY(-26px);
+      background: linear-gradient(150deg, rgba(23,216,245,.13), rgba(39,120,255,.08), rgba(115,62,255,.13));
+      border-color: rgba(23,216,245,.27);
+      box-shadow: 0 22px 70px rgba(23,216,245,.1);
+    }
+    .sync-icon {
+      width: 74px;
+      height: 74px;
+      display: grid;
+      place-items: center;
+      border-radius: 22px;
+      color: white;
+      background: linear-gradient(135deg, rgba(23,216,245,.28), rgba(39,120,255,.32), rgba(115,62,255,.4));
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 0 30px rgba(23,216,245,.18);
+      font-size: 31px;
+    }
+    .sync-stage small { color: var(--cyan); font-size: 10px; font-weight: 950; letter-spacing: .14em; }
+    .sync-stage h3 { font-size: clamp(20px, 1.8vw, 28px); letter-spacing: -.025em; }
+    .sync-stage p { color: var(--muted); font-size: clamp(12px, .92vw, 15px); line-height: 1.48; }
+    .sync-pulse {
+      position: absolute;
+      z-index: 3;
+      top: calc(50% - 5px);
+      left: 14%;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 0 16px white, 0 0 30px var(--cyan);
+      animation: knowledge-sync 4s ease-in-out infinite;
+    }
+    @keyframes knowledge-sync {
+      0% { left: 14%; opacity: 0; transform: scale(.7); }
+      12% { opacity: 1; }
+      50% { transform: scale(1.35); }
+      88% { opacity: 1; }
+      100% { left: 84%; opacity: 0; transform: scale(.7); }
+    }
+
     .controls {
       position: fixed;
       z-index: 20;
@@ -907,6 +1141,16 @@
       .future-track { grid-template-columns: 1fr; }
       .future-track::before { display: none; }
       .future-stop { min-height: 220px; padding-inline: 18px; }
+      .ai-tutor-update { grid-template-columns: 1fr; align-content: center; gap: 22px; }
+      .ai-capabilities { grid-template-columns: repeat(3, 1fr); }
+      .ai-capability { grid-template-columns: 1fr; }
+      .ai-capability > span { display: none; }
+      .tutor-chat { min-height: 42vh; }
+      .name-story { grid-template-columns: 1fr; align-content: center; gap: 22px; }
+      .name-definition { display: none; }
+      .sync-map { min-height: 38vh; }
+      .sync-stage { min-height: 180px; padding: 18px 12px; }
+      .sync-stage.ai-stage { transform: translateY(-12px); }
       .version-contrast, .interaction-tags { display: none; }
       .periodic-demo { padding: 18px; }
       .hint { display: none; }
@@ -921,7 +1165,7 @@
   <canvas id="webgl-bg" aria-hidden="true"></canvas>
   <main class="deck" aria-label="SkillSync presentation">
     <section class="slide hero active" data-title="SkillSync">
-      <span class="slide-number">01 / 11</span>
+      <span class="slide-number">01 / 13</span>
       <div class="hero-copy">
         <span class="eyebrow">Building real understanding</span>
         <h1 class="gradient-text">Skill<br>Sync</h1>
@@ -934,7 +1178,7 @@
     </section>
 
     <section class="slide purpose" data-title="What SkillSync does">
-      <span class="slide-number">02 / 11</span>
+      <span class="slide-number">02 / 13</span>
       <span class="eyebrow">What SkillSync does</span>
       <div>
         <h2>Practice reveals what students <span class="gradient-text">truly understand.</span></h2>
@@ -960,7 +1204,7 @@
     </section>
 
     <section class="slide comparison" data-title="Why not just ask AI?">
-      <span class="slide-number">03 / 11</span>
+      <span class="slide-number">03 / 13</span>
       <div>
         <span class="eyebrow">Why not just ask AI?</span>
         <h2 style="margin-top:18px">Answers can finish a problem. <span class="gradient-text">Learning builds capability.</span></h2>
@@ -981,7 +1225,7 @@
     </section>
 
     <section class="slide future" data-title="Future improvements">
-      <span class="slide-number">04 / 11</span>
+      <span class="slide-number">04 / 13</span>
       <span class="eyebrow">Future improvements</span>
       <div>
         <h2>The foundation is here. The next step is a <span class="gradient-text">stronger learning experience.</span></h2>
@@ -1007,7 +1251,7 @@
     </section>
 
     <section class="slide closing" data-title="Conclusion">
-      <span class="slide-number">05 / 11</span>
+      <span class="slide-number">05 / 13</span>
       <div class="closing-inner">
         <img class="closing-mark" src="../SkillSync/Assets.xcassets/SkillSyncLogo.imageset/SkillSyncSymbol.png" alt="SkillSync logo">
         <span class="eyebrow">The SkillSync promise</span>
@@ -1018,7 +1262,7 @@
     </section>
 
     <section class="slide update-one" data-title="Update number one">
-      <span class="slide-number">06 / 11</span>
+      <span class="slide-number">06 / 13</span>
       <div class="update-head">
         <span class="eyebrow">Update number one</span>
         <h2>Students can now choose <span class="gradient-text">Science</span> and see where their learning stands.</h2>
@@ -1048,7 +1292,7 @@
     </section>
 
     <section class="slide account-update" data-title="Accounts and personalization">
-      <span class="slide-number">07 / 11</span>
+      <span class="slide-number">07 / 13</span>
       <div class="account-visual" aria-hidden="true">
         <div class="account-orbit"></div>
         <div class="profile-core">
@@ -1078,7 +1322,7 @@
     </section>
 
     <section class="slide periodic-update" data-title="New improvement">
-      <span class="slide-number">08 / 11</span>
+      <span class="slide-number">08 / 13</span>
       <div class="improvement-copy">
         <span class="eyebrow">New improvement</span>
         <h2>The periodic table is now an <span class="gradient-text">experience—not just a chart.</span></h2>
@@ -1114,7 +1358,7 @@
     </section>
 
     <section class="slide demo-update" data-title="App demo">
-      <span class="slide-number">09 / 11</span>
+      <span class="slide-number">09 / 13</span>
       <div class="demo-copy">
         <span class="eyebrow">See SkillSync in action</span>
         <h2>A guided look at the <span class="gradient-text">learning experience.</span></h2>
@@ -1135,7 +1379,7 @@
     </section>
 
     <section class="slide lessons-learned" data-title="What I learned">
-      <span class="slide-number">10 / 11</span>
+      <span class="slide-number">10 / 13</span>
       <div class="lesson-copy">
         <span class="eyebrow">What I learned</span>
         <h2>A successful app needs something <span class="gradient-text">people cannot ignore.</span></h2>
@@ -1152,7 +1396,7 @@
     </section>
 
     <section class="slide next-roadmap" data-title="Future roadmap">
-      <span class="slide-number">11 / 11</span>
+      <span class="slide-number">11 / 13</span>
       <div class="roadmap-head">
         <div>
           <span class="eyebrow">The future roadmap</span>
@@ -1178,6 +1422,89 @@
           <h3>Create signature learning</h3>
           <p>Turn active recall and visual exploration into experiences that are memorable, useful, and uniquely SkillSync.</p>
           <span class="status">LONG-TERM GOAL</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide ai-tutor-update" data-title="AI Tutor">
+      <span class="slide-number">12 / 13</span>
+      <div class="ai-tutor-copy">
+        <span class="eyebrow">New AI Tutor</span>
+        <h2>Practice that responds to <span class="gradient-text">the student.</span></h2>
+        <p class="lead">The SkillSync AI Tutor can turn a school topic into custom questions, guided explanations, or a focused review—then continue the conversation as the student answers.</p>
+        <div class="ai-capabilities">
+          <article class="ai-capability">
+            <span>01</span>
+            <div><h3>Custom questions</h3><p>Students can request practice for a specific topic, concept, or level instead of receiving the same worksheet as everyone else.</p></div>
+          </article>
+          <article class="ai-capability">
+            <span>02</span>
+            <div><h3>Topic reviews</h3><p>The tutor explains correct information, clears up misunderstandings, and highlights the ideas the learner should remember.</p></div>
+          </article>
+          <article class="ai-capability">
+            <span>03</span>
+            <div><h3>Memory support</h3><p>Short mnemonics, patterns, analogies, and recall prompts help knowledge stay useful after the chat ends.</p></div>
+          </article>
+        </div>
+      </div>
+      <div class="tutor-chat" aria-label="Example conversation with the SkillSync AI Tutor">
+        <div class="tutor-chat-head">
+          <div class="tutor-avatar" aria-hidden="true">✦</div>
+          <div><strong>SkillSync AI Tutor</strong><small>GUIDED REVIEW</small></div>
+        </div>
+        <div class="chat-messages">
+          <div class="chat-bubble">Let’s review noble gases. Why are they usually less reactive than other elements?</div>
+          <div class="chat-bubble student">Their outside electron shell is already full.</div>
+          <div class="chat-bubble"><strong>Correct.</strong> A full outer shell is stable, so noble gases rarely need to gain, lose, or share electrons. <strong>Memory tip:</strong> “Noble” gases are already satisfied—they do not need to mingle.</div>
+          <div class="chat-prompts">
+            <span>QUIZ ME ON ELEMENTS</span>
+            <span>REVIEW ATOMIC NUMBERS</span>
+            <span>EXPLAIN MY MISTAKE</span>
+          </div>
+        </div>
+        <div class="chat-composer">
+          <span>Type your answer or ask a question…</span>
+          <span class="chat-send" aria-hidden="true">↑</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide name-story" data-title="Why SkillSync?">
+      <span class="slide-number">13 / 13</span>
+      <div class="name-copy">
+        <span class="eyebrow">Why the name SkillSync?</span>
+        <h2>Connect what students know with the help they need <span class="gradient-text">next.</span></h2>
+        <p class="lead"><strong>SkillSync</strong> describes the app’s purpose: using AI to synchronize a learner’s existing knowledge with personalized support, reinforcing understanding instead of replacing it.</p>
+        <div class="name-definition">
+          <article class="name-part">
+            <strong>Skill</strong>
+            <p>The knowledge, strategies, and ideas a student has already begun to build.</p>
+          </article>
+          <article class="name-part">
+            <strong>Sync</strong>
+            <p>Connecting that foundation with the right question, explanation, or review at the right time.</p>
+          </article>
+        </div>
+      </div>
+      <div class="sync-map" aria-label="Existing knowledge connects with AI support to reinforce understanding">
+        <span class="sync-pulse" aria-hidden="true"></span>
+        <article class="sync-stage">
+          <div class="sync-icon" aria-hidden="true">◫</div>
+          <small>START</small>
+          <h3>Known knowledge</h3>
+          <p>What the student already remembers, understands, or is still working through.</p>
+        </article>
+        <article class="sync-stage ai-stage">
+          <div class="sync-icon" aria-hidden="true">✦</div>
+          <small>SYNC</small>
+          <h3>AI guidance</h3>
+          <p>Custom questions, clear explanations, corrections, and memory tips.</p>
+        </article>
+        <article class="sync-stage">
+          <div class="sync-icon" aria-hidden="true">✓</div>
+          <small>RESULT</small>
+          <h3>Stronger understanding</h3>
+          <p>Knowledge becomes clearer, more connected, and easier to recall later.</p>
         </article>
       </div>
     </section>

@@ -779,6 +779,187 @@ struct PuffyGasCloud: View {
     }
 }
 
+struct ContainedGasSpecimen: View {
+    let element: PeriodicElement
+    let time: TimeInterval
+
+    private var sideCount: Int {
+        6 + element.number % 4
+    }
+
+    var body: some View {
+        let container = IrregularPolygonShape(
+            seed: element.number,
+            sideCount: sideCount
+        )
+
+        ZStack {
+            container
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            .white.opacity(0.055),
+                            element.materialTint.opacity(0.035),
+                            .black.opacity(0.12)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            GasVaporCanvas(
+                color: element.materialTint,
+                seed: element.number,
+                time: time
+            )
+            .mask(container)
+
+            container
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            .white.opacity(0.12),
+                            .clear,
+                            element.materialTint.opacity(0.08)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .blendMode(.screen)
+
+            container
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            .white.opacity(0.42),
+                            element.materialTint.opacity(0.52),
+                            .white.opacity(0.12)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.25
+                )
+        }
+        .compositingGroup()
+        .shadow(color: element.materialTint.opacity(0.2), radius: 10, y: 4)
+        .allowsHitTesting(false)
+    }
+}
+
+private struct GasVaporCanvas: View {
+    let color: Color
+    let seed: Int
+    let time: TimeInterval
+
+    var body: some View {
+        Canvas(rendersAsynchronously: true) { context, size in
+            context.addFilter(.blur(radius: 7))
+
+            for cloud in 0..<8 {
+                let cloudSeed = Double(seed * 47 + cloud * 29)
+                let speed = 0.045 + unit(cloudSeed + 2.7) * 0.024
+                let progress = (
+                    time * speed + unit(cloudSeed + 7.1)
+                ).truncatingRemainder(dividingBy: 1)
+                let direction = cloud.isMultiple(of: 3) ? -1.0 : 1.0
+                let travel = direction > 0 ? progress : 1 - progress
+                let width = size.width
+                    * (0.23 + unit(cloudSeed + 11.4) * 0.24)
+                let height = size.height
+                    * (0.16 + unit(cloudSeed + 16.8) * 0.2)
+                let x = -width * 0.25
+                    + CGFloat(travel) * (size.width + width * 0.5)
+                let baseY = size.height
+                    * (0.18 + unit(cloudSeed + 20.2) * 0.64)
+                let drift = CGFloat(
+                    sin(time * 0.34 + cloudSeed)
+                ) * size.height * 0.08
+                let fade = max(0, sin(progress * .pi))
+
+                var cloudContext = context
+                cloudContext.opacity = fade
+                    * (0.32 + unit(cloudSeed + 25.6) * 0.28)
+
+                let cloudRect = CGRect(
+                    x: x - width / 2,
+                    y: baseY + drift - height / 2,
+                    width: width,
+                    height: height
+                )
+                let cloudPath = Path(ellipseIn: cloudRect)
+
+                cloudContext.fill(
+                    cloudPath,
+                    with: .radialGradient(
+                        Gradient(colors: [
+                            .white.opacity(0.62),
+                            color.opacity(0.56),
+                            color.opacity(0.18),
+                            .clear
+                        ]),
+                        center: CGPoint(
+                            x: cloudRect.midX - width * 0.12,
+                            y: cloudRect.midY - height * 0.08
+                        ),
+                        startRadius: 0,
+                        endRadius: max(width, height) * 0.58
+                    )
+                )
+            }
+
+            for wisp in 0..<3 {
+                let wispSeed = Double(seed * 61 + wisp * 37)
+                let progress = (
+                    time * (0.035 + unit(wispSeed) * 0.018)
+                        + unit(wispSeed + 4.9)
+                ).truncatingRemainder(dividingBy: 1)
+                let startX = CGFloat(progress) * (size.width + 50) - 25
+                let startY = size.height
+                    * (0.26 + unit(wispSeed + 8.2) * 0.5)
+                var path = Path()
+                path.move(to: CGPoint(x: startX - 30, y: startY + 8))
+                path.addCurve(
+                    to: CGPoint(x: startX + 34, y: startY - 6),
+                    control1: CGPoint(
+                        x: startX - 10,
+                        y: startY - 18
+                            + CGFloat(sin(time * 0.42 + wispSeed)) * 6
+                    ),
+                    control2: CGPoint(
+                        x: startX + 12,
+                        y: startY + 16
+                    )
+                )
+
+                var wispContext = context
+                wispContext.opacity = max(0, sin(progress * .pi)) * 0.32
+                wispContext.stroke(
+                    path,
+                    with: .linearGradient(
+                        Gradient(colors: [
+                            .clear,
+                            color.opacity(0.7),
+                            .white.opacity(0.48),
+                            .clear
+                        ]),
+                        startPoint: CGPoint(x: startX - 30, y: startY),
+                        endPoint: CGPoint(x: startX + 34, y: startY)
+                    ),
+                    style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                )
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func unit(_ value: Double) -> Double {
+        let raw = sin(value * 12.9898) * 43_758.5453
+        return raw - floor(raw)
+    }
+}
+
 struct ElementLiquidTexture: View {
     let element: PeriodicElement
     let time: TimeInterval
@@ -2589,6 +2770,8 @@ extension PeriodicElement {
 struct ElementDetailView: View {
     let element: PeriodicElement
     @Environment(\.dismiss) private var dismiss
+    @State private var tutorPrompt = ""
+    @State private var isShowingTutor = false
 
     var body: some View {
         ZStack {
@@ -2621,11 +2804,14 @@ struct ElementDetailView: View {
                         Text(element.name)
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
+
+                        Text(element.scienceSummaryLine)
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.48))
+                            .multilineTextAlignment(.center)
                     }
 
-                    if element.materialKind != .gas {
-                        ElementDetailMaterialPreview(element: element)
-                    }
+                    ElementDetailMaterialPreview(element: element)
 
                     Text(element.category.title)
                         .font(.system(size: 15, weight: .bold, design: .rounded))
@@ -2670,6 +2856,8 @@ struct ElementDetailView: View {
                             .lineSpacing(3)
                     }
 
+                    ElementPhaseExplorer(element: element)
+
                     VStack(alignment: .leading, spacing: 12) {
                         Text("LEARN MORE")
                             .font(.system(size: 12, weight: .black, design: .rounded))
@@ -2678,17 +2866,38 @@ struct ElementDetailView: View {
                             .padding(.leading, 4)
 
                         ElementInformationRow(
-                            icon: "globe.americas.fill",
-                            title: "Where it is found",
-                            text: element.occurrenceDescription,
+                            icon: "atom",
+                            title: "Inside one atom",
+                            text: element.atomicCompositionDescription,
                             accent: .cyan
                         )
 
                         ElementInformationRow(
                             icon: "cube.transparent.fill",
-                            title: "Forms it can take",
-                            text: element.formsDescription,
+                            title: "Pure element vs. materials",
+                            text: element.materialCompositionDescription,
                             accent: .purple
+                        )
+
+                        ElementInformationRow(
+                            icon: "thermometer.medium",
+                            title: "When each phase appears",
+                            text: element.phaseConditionsDescription,
+                            accent: .red
+                        )
+
+                        ElementInformationRow(
+                            icon: "eye.fill",
+                            title: "How the forms look",
+                            text: element.formAppearanceDescription,
+                            accent: .indigo
+                        )
+
+                        ElementInformationRow(
+                            icon: "globe.americas.fill",
+                            title: "Where it is found",
+                            text: element.occurrenceDescription,
+                            accent: .teal
                         )
 
                         ElementInformationRow(
@@ -2705,11 +2914,26 @@ struct ElementDetailView: View {
                             accent: .orange
                         )
                     }
+
+                    ElementTutorQuestionPanel(element: element) { prompt in
+                        tutorPrompt = prompt
+                        isShowingTutor = true
+                    }
                 }
                 .padding(24)
             }
         }
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $isShowingTutor) {
+            TutorView(
+                initialPrompt: tutorPrompt,
+                isPresentedModally: true,
+                contextTitle: "\(element.name) Tutor",
+                studyContext: element.tutorStudyContext
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
     }
 }
 
@@ -2757,6 +2981,350 @@ struct ElementInformationRow: View {
     }
 }
 
+extension ElementPhysicalForm {
+    var icon: String {
+        switch self {
+        case .solid: "cube.fill"
+        case .liquid: "drop.fill"
+        case .gas: "cloud.fill"
+        }
+    }
+}
+
+struct ElementPhaseExplorer: View {
+    let element: PeriodicElement
+    @State private var selectedForm: ElementPhysicalForm
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(element: PeriodicElement) {
+        self.element = element
+
+        let state = element.scienceRecord.standardState.lowercased()
+        let initialForm: ElementPhysicalForm
+        if state.contains("liquid") {
+            initialForm = .liquid
+        } else if state.contains("gas") {
+            initialForm = .gas
+        } else {
+            initialForm = .solid
+        }
+        _selectedForm = State(initialValue: initialForm)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("FORM EXPLORER")
+                        .font(.system(size: 11, weight: .black, design: .rounded))
+                        .tracking(1.4)
+                        .foregroundStyle(.cyan)
+
+                    Text("See how \(element.name) changes")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+
+                Spacer()
+
+                Image(systemName: "sparkles")
+                    .foregroundStyle(.purple)
+            }
+
+            HStack(spacing: 8) {
+                ForEach(ElementPhysicalForm.allCases) { form in
+                    let isSelected = selectedForm == form
+
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.22)) {
+                            selectedForm = form
+                        }
+                    } label: {
+                        Label(form.title, systemImage: form.icon)
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(
+                                isSelected ? .white : .white.opacity(0.52)
+                            )
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(
+                                isSelected
+                                    ? element.category.color.opacity(0.34)
+                                    : .white.opacity(0.055),
+                                in: RoundedRectangle(cornerRadius: 12)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            Group {
+                if selectedForm == .solid {
+                    phasePreview(at: 0)
+                } else {
+                    TimelineView(
+                        .animation(
+                            minimumInterval: 1 / 12,
+                            paused: reduceMotion
+                        )
+                    ) { timeline in
+                        phasePreview(
+                            at: reduceMotion
+                                ? 0
+                                : timeline.date.timeIntervalSinceReferenceDate
+                        )
+                    }
+                }
+            }
+
+            Label(
+                element.conditionDescription(for: selectedForm),
+                systemImage: "thermometer.medium"
+            )
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            .foregroundStyle(.white.opacity(0.68))
+            .fixedSize(horizontal: false, vertical: true)
+
+            Text(element.formAppearanceDescription)
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.62))
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Animated previews are educational visualizations, not photographs. Colors can change with pressure, purity, allotrope, and lighting.")
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.36))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .background(
+            LinearGradient(
+                colors: [
+                    element.category.color.opacity(0.12),
+                    .purple.opacity(0.07),
+                    .white.opacity(0.025)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: 22)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(element.category.color.opacity(0.24), lineWidth: 1)
+        }
+    }
+
+    private func phasePreview(at time: TimeInterval) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 18)
+                .fill(.black.opacity(0.26))
+
+            switch selectedForm {
+            case .solid:
+                SolidElementSpecimen(element: element, time: 0)
+                    .equatable()
+                    .scaleEffect(2.15)
+                    .frame(width: 150, height: 102)
+            case .liquid:
+                GenericElementLiquidPhase(element: element, time: time)
+                    .frame(width: 168, height: 102)
+            case .gas:
+                ContainedGasSpecimen(element: element, time: time)
+                    .frame(width: 174, height: 104)
+            }
+
+            VStack {
+                HStack {
+                    Label(
+                        selectedForm.title.uppercased(),
+                        systemImage: selectedForm.icon
+                    )
+                    .font(.system(size: 9, weight: .black, design: .rounded))
+                    .tracking(1)
+                    .foregroundStyle(.white.opacity(0.74))
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 6)
+                    .background(.black.opacity(0.34), in: Capsule())
+
+                    Spacer()
+                }
+                Spacer()
+            }
+            .padding(10)
+        }
+        .frame(height: 132)
+        .clipped()
+        .overlay {
+            RoundedRectangle(cornerRadius: 18)
+                .stroke(.white.opacity(0.1), lineWidth: 1)
+        }
+        .accessibilityLabel(
+            "Animated \(selectedForm.rawValue) preview for \(element.name)"
+        )
+    }
+}
+
+private struct GenericElementLiquidPhase: View {
+    let element: PeriodicElement
+    let time: TimeInterval
+
+    private var colors: [Color] {
+        switch element.number {
+        case 1, 2, 7:
+            [.white.opacity(0.2), .cyan.opacity(0.28), .white.opacity(0.72)]
+        case 8:
+            [Color(red: 0.12, green: 0.48, blue: 0.95), .cyan, .white.opacity(0.7)]
+        case 9, 17:
+            [.yellow.opacity(0.55), .green.opacity(0.58), .white.opacity(0.64)]
+        case 35:
+            [Color(red: 0.18, green: 0.005, blue: 0), .red, .orange.opacity(0.55)]
+        case 53:
+            [.black, .purple.opacity(0.9), .indigo]
+        case 80:
+            [Color(white: 0.18), .white.opacity(0.92), Color(white: 0.42)]
+        default:
+            [
+                element.materialTint.opacity(0.48),
+                element.materialTint,
+                .white.opacity(0.72)
+            ]
+        }
+    }
+
+    var body: some View {
+        let container = IrregularPolygonShape(
+            seed: element.number + 211,
+            sideCount: 7 + element.number % 3
+        )
+
+        ZStack {
+            container
+                .fill(.white.opacity(0.025))
+
+            LinearGradient(
+                colors: colors,
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .overlay {
+                Canvas(rendersAsynchronously: true) { context, size in
+                    for glint in 0..<5 {
+                        let travel = (
+                            time * Double(7 + glint)
+                                + Double(glint * 19 + element.number)
+                        ).truncatingRemainder(
+                            dividingBy: Double(size.width + 24)
+                        )
+                        let y = size.height
+                            * (0.55 + CGFloat(glint % 3) * 0.1)
+                        let width = CGFloat(8 + glint * 3)
+                        let rect = CGRect(
+                            x: CGFloat(travel) - 12,
+                            y: y,
+                            width: width,
+                            height: 1.3
+                        )
+                        context.fill(
+                            Path(roundedRect: rect, cornerRadius: 1),
+                            with: .color(.white.opacity(0.48))
+                        )
+                    }
+                }
+            }
+            .mask {
+                ElementLiquidFillMask(
+                    time: time,
+                    phase: element.animationPhase,
+                    waveSpeed: 1.3,
+                    waveAmplitude: 2.4
+                )
+            }
+            .mask(container)
+
+            container
+                .stroke(.white.opacity(0.14), lineWidth: 1)
+        }
+        .shadow(color: element.materialTint.opacity(0.2), radius: 8, y: 3)
+        .allowsHitTesting(false)
+    }
+}
+
+struct ElementTutorQuestionPanel: View {
+    let element: PeriodicElement
+    let onAsk: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("ASK THE AI TUTOR", systemImage: "sparkles")
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .tracking(1.3)
+                .foregroundStyle(.cyan)
+
+            Text("Choose a guided review. The tutor will ask questions, wait for your answers, correct mistakes, and add memory tips.")
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.62))
+                .fixedSize(horizontal: false, vertical: true)
+
+            ForEach(
+                Array(element.focusedTutorQuestions.enumerated()),
+                id: \.offset
+            ) { index, question in
+                Button {
+                    onAsk(question)
+                } label: {
+                    HStack(spacing: 12) {
+                        Text("\(index + 1)")
+                            .font(.system(size: 12, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
+                            .frame(width: 28, height: 28)
+                            .background(
+                                LinearGradient(
+                                    colors: [.cyan, .blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                in: Circle()
+                            )
+
+                        Text(question)
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.8))
+                            .multilineTextAlignment(.leading)
+
+                        Spacer(minLength: 0)
+
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption.bold())
+                            .foregroundStyle(.cyan)
+                    }
+                    .padding(12)
+                    .background(.white.opacity(0.055))
+                    .clipShape(RoundedRectangle(cornerRadius: 15))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 15)
+                            .stroke(.cyan.opacity(0.16), lineWidth: 1)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(16)
+        .background(
+            LinearGradient(
+                colors: [.cyan.opacity(0.1), .purple.opacity(0.08)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: 22)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(.cyan.opacity(0.22), lineWidth: 1)
+        }
+    }
+}
+
 struct ElementDetailMaterialPreview: View {
     let element: PeriodicElement
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -2768,6 +3336,7 @@ struct ElementDetailMaterialPreview: View {
 
     private var isAnimatedMaterial: Bool {
         element.materialKind == .liquid
+            || element.materialKind == .gas
     }
 
     private var isSpinnable: Bool {
@@ -2837,7 +3406,9 @@ struct ElementDetailMaterialPreview: View {
             if isAnimatedMaterial {
                 TimelineView(
                     .animation(
-                        minimumInterval: 1 / 30,
+                        minimumInterval: element.materialKind == .gas
+                            ? 1 / 20
+                            : 1 / 30,
                         paused: reduceMotion
                     )
                 ) { timeline in
@@ -2873,9 +3444,13 @@ struct ElementDetailMaterialPreview: View {
             VStack {
                 Spacer()
                 Text(
-                    isSpinnable
-                        ? "DRAG TO SPIN · \(element.materialKind.label.uppercased())"
-                        : "\(element.materialKind.label.uppercased()) TEXTURE"
+                    element.materialKind == .gas
+                        ? "VAPOR MOVING INSIDE A CONTAINER"
+                        : (
+                            isSpinnable
+                                ? "DRAG TO SPIN · \(element.materialKind.label.uppercased())"
+                                : "\(element.materialKind.label.uppercased()) TEXTURE"
+                        )
                 )
                     .font(.system(size: 10, weight: .black, design: .rounded))
                     .tracking(1.2)
@@ -2895,7 +3470,11 @@ struct ElementDetailMaterialPreview: View {
         .accessibilityLabel(
             "\(element.materialKind.label) texture preview for \(element.name)"
         )
-        .accessibilityHint(isSpinnable ? "Drag to rotate the specimen" : "")
+        .accessibilityHint(
+            element.materialKind == .gas
+                ? "Shows an educational vapor visualization inside a container"
+                : (isSpinnable ? "Drag to rotate the specimen" : "")
+        )
     }
 
     @ViewBuilder
@@ -2934,6 +3513,10 @@ struct ElementDetailMaterialPreview: View {
         } else if element.materialKind == .liquid {
             ElementLiquidSpecimen(element: element, time: time)
                 .scaleEffect(2.25)
+
+        } else if element.materialKind == .gas {
+            ContainedGasSpecimen(element: element, time: time)
+                .frame(width: 172, height: 116)
 
         }
     }
@@ -3545,6 +4128,47 @@ struct IrregularOctagonShape: Shape {
             let point = CGPoint(
                 x: center.x + CGFloat(cos(angle)) * rect.width * 0.48 * radius,
                 y: center.y + CGFloat(sin(angle)) * rect.height * 0.48 * radius
+            )
+
+            if index == 0 {
+                path.move(to: point)
+            } else {
+                path.addLine(to: point)
+            }
+        }
+
+        path.closeSubpath()
+        return path
+    }
+
+    private func unit(_ value: Int) -> CGFloat {
+        let raw = sin(Double(value) * 12.9898) * 43_758.5453
+        return CGFloat(raw - floor(raw))
+    }
+}
+
+struct IrregularPolygonShape: Shape {
+    let seed: Int
+    let sideCount: Int
+
+    func path(in rect: CGRect) -> Path {
+        let sides = max(5, min(10, sideCount))
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        var path = Path()
+
+        for index in 0..<sides {
+            let baseAngle = Double(index) / Double(sides) * .pi * 2 - .pi / 2
+            let angleOffset = Double(
+                unit(seed * 53 + index * 31) - 0.5
+            ) * 0.16
+            let radius = 0.78 + unit(seed * 37 + index * 17) * 0.2
+            let point = CGPoint(
+                x: center.x
+                    + CGFloat(cos(baseAngle + angleOffset))
+                    * rect.width * 0.48 * radius,
+                y: center.y
+                    + CGFloat(sin(baseAngle + angleOffset))
+                    * rect.height * 0.48 * radius
             )
 
             if index == 0 {

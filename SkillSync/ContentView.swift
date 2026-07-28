@@ -553,6 +553,15 @@ struct HomeView: View {
                     \.skillSyncAnimationsEnabled,
                     selectedTab == .progress
                 )
+
+            TutorView()
+                .opacity(selectedTab == .tutor ? 1 : 0)
+                .allowsHitTesting(selectedTab == .tutor)
+                .zIndex(selectedTab == .tutor ? 1 : 0)
+                .environment(
+                    \.skillSyncAnimationsEnabled,
+                    selectedTab == .tutor
+                )
         }
         .tint(.cyan)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -565,6 +574,7 @@ struct HomeView: View {
 enum SkillSyncTab: CaseIterable, Identifiable {
     case home
     case progress
+    case tutor
 
     var id: Self { self }
 
@@ -572,6 +582,7 @@ enum SkillSyncTab: CaseIterable, Identifiable {
         switch self {
         case .home: "Home"
         case .progress: "Progress"
+        case .tutor: "AI Tutor"
         }
     }
 
@@ -579,6 +590,7 @@ enum SkillSyncTab: CaseIterable, Identifiable {
         switch self {
         case .home: "house.fill"
         case .progress: "chart.bar.fill"
+        case .tutor: "sparkles"
         }
     }
 }
@@ -1174,50 +1186,6 @@ struct BubbleTitle: View {
         Text(text)
             .font(.custom("Arial Rounded MT Bold", fixedSize: 48))
             .tracking(-1.8)
-    }
-}
-
-struct TutorPlaceholderView: View {
-    var body: some View {
-        ZStack {
-            AmbientBackgroundView(isAnimated: true)
-
-            GlowingWaveOverlay(
-                intensity: 0.46,
-                verticalOffset: -120,
-                isAnimated: true
-            )
-
-            VStack(spacing: 18) {
-                Image(systemName: "person.2.wave.2.fill")
-                    .font(.system(size: 54, weight: .medium))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.cyan, .blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .shadow(color: .cyan.opacity(0.4), radius: 18)
-
-                Text("Tutor list goes here")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
-
-                Text("Placeholder content")
-                    .foregroundStyle(.white.opacity(0.58))
-
-            }
-            .padding(32)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28))
-            .overlay {
-                RoundedRectangle(cornerRadius: 28)
-                    .stroke(.white.opacity(0.14), lineWidth: 1)
-            }
-            .shadow(color: .purple.opacity(0.2), radius: 30, y: 14)
-            .padding()
-        }
-        .navigationTitle("Find a Tutor")
     }
 }
 
