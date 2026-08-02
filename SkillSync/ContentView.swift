@@ -562,6 +562,15 @@ struct HomeView: View {
                     \.skillSyncAnimationsEnabled,
                     selectedTab == .tutor
                 )
+
+            PixelQuestView(isActive: selectedTab == .play)
+                .opacity(selectedTab == .play ? 1 : 0)
+                .allowsHitTesting(selectedTab == .play)
+                .zIndex(selectedTab == .play ? 1 : 0)
+                .environment(
+                    \.skillSyncAnimationsEnabled,
+                    selectedTab == .play
+                )
         }
         .tint(.cyan)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -573,24 +582,27 @@ struct HomeView: View {
 
 enum SkillSyncTab: CaseIterable, Identifiable {
     case home
-    case progress
     case tutor
+    case play
+    case progress
 
     var id: Self { self }
 
     var title: String {
         switch self {
         case .home: "Home"
-        case .progress: "Progress"
         case .tutor: "AI Tutor"
+        case .play: "Pixel Quest"
+        case .progress: "Progress"
         }
     }
 
     var systemImage: String {
         switch self {
         case .home: "house.fill"
-        case .progress: "chart.bar.fill"
         case .tutor: "sparkles"
+        case .play: "gamecontroller.fill"
+        case .progress: "chart.bar.fill"
         }
     }
 }
@@ -613,7 +625,15 @@ struct AuroraTabBar: View {
                             .font(.system(size: 18, weight: .bold))
 
                         Text(tab.title)
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .font(
+                                .system(
+                                    size: tab == .play ? 9 : 10,
+                                    weight: .black,
+                                    design: tab == .play ? .monospaced : .rounded
+                                )
+                            )
+                            .minimumScaleFactor(0.72)
+                            .lineLimit(1)
                     }
                     .foregroundStyle(
                         isSelected ? .white : .white.opacity(0.48)
