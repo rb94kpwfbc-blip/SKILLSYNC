@@ -1,7 +1,9 @@
 import SwiftUI
+import UIKit
 
 struct PixelQuestView: View {
     let isActive: Bool
+    @Binding var isPlaying: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var transitionProgress: CGFloat = 0
@@ -15,7 +17,7 @@ struct PixelQuestView: View {
 
             if isQuestVisible {
                 NavigationStack {
-                    PixelQuestStartView()
+                    PixelQuestStartView(isPlaying: $isPlaying)
                 }
                 .transition(.identity)
             }
@@ -82,6 +84,8 @@ struct PixelQuestView: View {
 }
 
 struct PixelQuestStartView: View {
+    @Binding var isPlaying: Bool
+
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
@@ -120,7 +124,7 @@ struct PixelQuestStartView: View {
 
                         LazyVGrid(columns: columns, spacing: 12) {
                             NavigationLink {
-                                PixelQuestGameView()
+                                PixelQuestGameOverviewView(isPlaying: $isPlaying)
                             } label: {
                                 PixelQuestGameTab(
                                     title: "Learning Elements",
@@ -394,6 +398,127 @@ struct PixelQuestWorldCard: View {
     }
 }
 
+struct PixelQuestGameOverviewView: View {
+    @Binding var isPlaying: Bool
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack {
+            PixelQuestBackground()
+
+            ScrollView {
+                VStack(spacing: 18) {
+                    VStack(spacing: 6) {
+                        Text("LEARNING ELEMENTS")
+                            .font(.system(size: 28, weight: .black, design: .monospaced))
+                            .foregroundStyle(.white)
+
+                        Text("A SHORT PIXEL QUEST")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .tracking(2)
+                            .foregroundStyle(.cyan)
+                    }
+
+                    PixelQuestWorldCard()
+
+                    VStack(alignment: .leading, spacing: 13) {
+                        Text("YOUR MISSION")
+                            .font(.system(size: 13, weight: .black, design: .monospaced))
+                            .foregroundStyle(.orange)
+
+                        Text("Collect ten iron ores and three rare carbon crystals. Use the Moon Forge to combine them into steel, craft a steel sword, and defeat the ultimate Rust Boss.")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.86))
+                            .lineSpacing(4)
+
+                        PixelQuestLoopRow(
+                            icon: "atom",
+                            title: "IRON + CARBON → STEEL",
+                            detail: "Learn how a controlled amount of carbon changes iron into a stronger alloy.",
+                            accent: .cyan
+                        )
+
+                        PixelQuestLoopRow(
+                            icon: "drop.triangle.fill",
+                            title: "RUST DAMAGES IRON",
+                            detail: "See how oxygen and moisture corrode iron and weaken unprotected metal.",
+                            accent: .orange
+                        )
+
+                        PixelQuestLoopRow(
+                            icon: "shield.lefthalf.filled",
+                            title: "TURN KNOWLEDGE INTO GEAR",
+                            detail: "Collect, learn, forge, then use your steel sword against the Rust Boss.",
+                            accent: .purple
+                        )
+                    }
+                    .padding(17)
+                    .background(Color.black.opacity(0.34), in: RoundedRectangle(cornerRadius: 18))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(.cyan.opacity(0.24), lineWidth: 1)
+                    }
+
+                    HStack(spacing: 16) {
+                        PixelRustMonsterSprite(direction: .south, action: .idle)
+                            .frame(width: 116, height: 116)
+
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("RUST BOSS")
+                                .font(.system(size: 15, weight: .black, design: .monospaced))
+                                .foregroundStyle(.orange)
+                            Text("A low-top-down rust crawler made from corroded plates. It chases nearby players, attacks at close range, and stops pursuing when you escape its territory.")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.66))
+                        }
+
+                        Spacer(minLength: 0)
+                    }
+                    .padding(14)
+                    .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 18))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(.orange.opacity(0.32), lineWidth: 1)
+                    }
+
+                    NavigationLink {
+                        PixelQuestGameView(
+                            isPlaying: $isPlaying,
+                            quitToMenu: { dismiss() }
+                        )
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "play.fill")
+                            Text("START")
+                        }
+                        .font(.system(size: 18, weight: .black, design: .monospaced))
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            LinearGradient(
+                                colors: [.cyan, .blue.opacity(0.9)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ),
+                            in: RoundedRectangle(cornerRadius: 16)
+                        )
+                        .shadow(color: .cyan.opacity(0.32), radius: 14, y: 6)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 24)
+                }
+                .frame(maxWidth: 560)
+                .padding(20)
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .navigationTitle("Quest Overview")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear { isPlaying = false }
+    }
+}
+
 struct PixelQuestLoopRow: View {
     let icon: String
     let title: String
@@ -424,23 +549,47 @@ struct PixelQuestLoopRow: View {
 }
 
 struct PixelQuestGameView: View {
+    @Binding var isPlaying: Bool
+    let quitToMenu: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
     private let mapRows = 21
     private let mapColumns = 14
     private let zoneSize = 7
-    private let viewportColumns = 10
-    private let viewportRows = 7
-    private let requiredIronCount = 5
-    private let requiredCarbonCount = 1
+    // Keep the same camera style while zooming slightly closer than before.
+    private let viewportColumns: CGFloat = 5.75
+    private let viewportRows: CGFloat = 4.025
+    private let requiredIronCount = 10
+    private let requiredCarbonCount = 3
     private let ironDeposits = [
         PixelResourceDeposit(id: 0, position: PixelPosition(x: 4.15, y: 10.86)),
         PixelResourceDeposit(id: 1, position: PixelPosition(x: 6.45, y: 10.38)),
         PixelResourceDeposit(id: 2, position: PixelPosition(x: 10.72, y: 11.18)),
         PixelResourceDeposit(id: 3, position: PixelPosition(x: 2.55, y: 18.10)),
-        PixelResourceDeposit(id: 4, position: PixelPosition(x: 8.15, y: 17.45))
+        PixelResourceDeposit(id: 4, position: PixelPosition(x: 8.15, y: 17.45)),
+        PixelResourceDeposit(id: 5, position: PixelPosition(x: 4.12, y: 9.38)),
+        PixelResourceDeposit(id: 6, position: PixelPosition(x: 8.12, y: 10.30)),
+        PixelResourceDeposit(id: 7, position: PixelPosition(x: 4.72, y: 15.72)),
+        PixelResourceDeposit(id: 8, position: PixelPosition(x: 10.78, y: 16.72)),
+        PixelResourceDeposit(id: 9, position: PixelPosition(x: 6.32, y: 18.78))
     ]
-    private let carbonPosition = PixelPosition(x: 10.92, y: 18.62)
+    private let carbonDeposits = [
+        PixelResourceDeposit(id: 0, position: PixelPosition(x: 1.70, y: 18.35)),
+        PixelResourceDeposit(id: 1, position: PixelPosition(x: 10.92, y: 18.62)),
+        PixelResourceDeposit(id: 2, position: PixelPosition(x: 6.15, y: 16.12))
+    ]
     private let forgePosition = PixelPosition(x: 11, y: 9)
     private let ironCavernsSignPosition = CGPoint(x: 3.25, y: 4.25)
+    private let dripstones = [
+        PixelDripstonePlacement(id: 0, position: PixelPosition(x: 3.15, y: 3.32), size: 1.12, mirrored: false),
+        PixelDripstonePlacement(id: 1, position: PixelPosition(x: 6.42, y: 4.12), size: 0.98, mirrored: true),
+        PixelDripstonePlacement(id: 2, position: PixelPosition(x: 2.52, y: 10.08), size: 1.16, mirrored: false),
+        PixelDripstonePlacement(id: 3, position: PixelPosition(x: 9.42, y: 10.26), size: 1.18, mirrored: true),
+        PixelDripstonePlacement(id: 4, position: PixelPosition(x: 4.10, y: 11.18), size: 0.92, mirrored: true),
+        PixelDripstonePlacement(id: 5, position: PixelPosition(x: 10.62, y: 11.08), size: 0.88, mirrored: false),
+        PixelDripstonePlacement(id: 6, position: PixelPosition(x: 2.02, y: 16.02), size: 1.04, mirrored: false),
+        PixelDripstonePlacement(id: 7, position: PixelPosition(x: 11.10, y: 17.78), size: 1.08, mirrored: true)
+    ]
 
     // The landing, crystal pit, and lower cavern are one continuous world.
     // These boundaries sit slightly inside the visible stonework so the
@@ -486,43 +635,45 @@ struct PixelQuestGameView: View {
         PixelCollisionCircle(x: 5.55, y: 15.36, radius: 0.42),
         PixelCollisionCircle(x: 8.70, y: 15.20, radius: 0.40),
         PixelCollisionCircle(x: 10.48, y: 16.08, radius: 0.46),
-        PixelCollisionCircle(x: 11.00, y: 9.00, radius: 0.62)
-    ]
-
-    // Raised lunar ridges add depth and create routes in Crystal Depths.
-    // Their gaps deliberately keep the left and right sides accessible.
-    private let thirdAreaBarrierZones = [
-        PixelCollisionRect(minX: 3.72, maxX: 5.18, minY: 16.22, maxY: 16.70),
-        PixelCollisionRect(minX: 8.82, maxX: 10.12, minY: 15.86, maxY: 16.34),
-        PixelCollisionRect(minX: 5.72, maxX: 7.32, minY: 18.18, maxY: 18.68)
-    ]
-
-    private let thirdAreaBarriers = [
-        PixelDepthBarrier(id: 0, position: PixelPosition(x: 4.45, y: 16.46), width: 1.46),
-        PixelDepthBarrier(id: 1, position: PixelPosition(x: 9.47, y: 16.10), width: 1.30),
-        PixelDepthBarrier(id: 2, position: PixelPosition(x: 6.52, y: 18.43), width: 1.60)
+        PixelCollisionCircle(x: 11.00, y: 9.00, radius: 0.62),
+        PixelCollisionCircle(x: 3.15, y: 3.32, radius: 0.42),
+        PixelCollisionCircle(x: 6.42, y: 4.12, radius: 0.38),
+        PixelCollisionCircle(x: 2.52, y: 10.08, radius: 0.46),
+        PixelCollisionCircle(x: 9.42, y: 10.26, radius: 0.48),
+        PixelCollisionCircle(x: 4.10, y: 11.18, radius: 0.34),
+        PixelCollisionCircle(x: 10.62, y: 11.08, radius: 0.34),
+        PixelCollisionCircle(x: 2.02, y: 16.02, radius: 0.42),
+        PixelCollisionCircle(x: 11.10, y: 17.78, radius: 0.44)
     ]
 
     @State private var playerPosition = CGPoint(x: 4.75, y: 3)
     @State private var ironCount = 0
     @State private var carbonCount = 0
     @State private var collectedIronIDs: Set<Int> = []
-    @State private var collectedCarbon = false
+    @State private var collectedCarbonIDs: Set<Int> = []
     @State private var hasSteelIngot = false
     @State private var hasSteelSword = false
     @State private var showingForge = false
     @State private var selectedLearningMaterial: PixelLearningMaterial?
     @State private var pickupMaterial: PixelLearningMaterial?
+    @State private var hasShownCarbonPickupLesson = false
     @State private var forgeHint = "Walk south through the gateway into the crystal pit."
     @State private var robotDirection = RobotDirection.south
     @State private var robotIsWalking = false
+    @State private var robotIsAttacking = false
+    @State private var swordAttackReady = true
+    @State private var robotIsDamaged = false
+    @State private var robotDamagePhase = 0
+    @State private var showingDeathScreen = false
     @State private var lastDirectionChange = Date.distantPast
     @State private var shieldCount = 3
     @State private var lastRustHit = Date.distantPast
     @State private var rustMonsters = [
-        PixelRustMonster(id: 0, position: CGPoint(x: 2.20, y: 16.20), direction: .east, action: .moving, ticksRemaining: 38),
-        PixelRustMonster(id: 1, position: CGPoint(x: 7.60, y: 17.10), direction: .southWest, action: .idle, ticksRemaining: 14),
-        PixelRustMonster(id: 2, position: CGPoint(x: 10.60, y: 18.10), direction: .northWest, action: .moving, ticksRemaining: 52)
+        PixelRustMonster(id: 0, position: CGPoint(x: 4.55, y: 9.72), direction: .east, action: .moving, ticksRemaining: 38, isAggro: false, health: 2, isBoss: false),
+        PixelRustMonster(id: 1, position: CGPoint(x: 10.45, y: 10.18), direction: .southWest, action: .idle, ticksRemaining: 14, isAggro: false, health: 2, isBoss: false),
+        PixelRustMonster(id: 2, position: CGPoint(x: 6.70, y: 17.35), direction: .northWest, action: .moving, ticksRemaining: 52, isAggro: false, health: 3, isBoss: true),
+        PixelRustMonster(id: 3, position: CGPoint(x: 2.25, y: 16.20), direction: .southEast, action: .idle, ticksRemaining: 26, isAggro: false, health: 2, isBoss: false),
+        PixelRustMonster(id: 4, position: CGPoint(x: 9.35, y: 15.72), direction: .west, action: .moving, ticksRemaining: 44, isAggro: false, health: 2, isBoss: false)
     ]
 
     private var currentColumn: Int {
@@ -531,32 +682,6 @@ struct PixelQuestGameView: View {
 
     private var currentRow: Int {
         min(Int(playerPosition.y / CGFloat(zoneSize)), 2)
-    }
-
-    // The landing artwork is exactly one viewport wide and begins 1.75 cells
-    // into the full world image. Keep the camera locked to that framed room
-    // until the robot enters its exit road, otherwise following the robot at
-    // the room edges exposes the black canvas outside the stone border.
-    private var landingCameraBlend: CGFloat {
-        min(max((playerPosition.y - 5.1) / 2.0, 0), 1)
-    }
-
-    private var horizontalCameraOffsetCells: CGFloat {
-        let normalOffset = min(
-            max(playerPosition.x - 3, 0),
-            CGFloat(mapColumns - viewportColumns)
-        )
-        let lockedLandingOffset: CGFloat = 1.75
-        return lockedLandingOffset
-            + (normalOffset - lockedLandingOffset) * landingCameraBlend
-    }
-
-    private var verticalCameraOffsetCells: CGFloat {
-        let normalOffset = min(
-            max(playerPosition.y - 3, 0),
-            CGFloat(mapRows - viewportRows)
-        )
-        return normalOffset * landingCameraBlend
     }
 
     private var areaTitle: String {
@@ -581,7 +706,7 @@ struct PixelQuestGameView: View {
         if forgeUnlocked {
             return currentRow == 1 && currentColumn == 1
                 ? "All materials found. Tap the Moon Forge to craft the steel sword."
-                : "Return to the Moon Forge with 5 iron and 1 carbon shard."
+                : "Return to the Moon Forge with 10 iron and 3 carbon crystals."
         }
         if currentRow == 0 {
             return "Follow the southern path to begin collecting materials."
@@ -590,8 +715,8 @@ struct PixelQuestGameView: View {
             return "Search every side of the depths for rare carbon."
         }
         return currentColumn == 0
-            ? "Iron collected: \(ironCount)/\(requiredIronCount). Carbon: \(carbonCount)/1."
-            : "The forge unlocks at 5 iron and 1 carbon shard."
+            ? "Iron collected: \(ironCount)/\(requiredIronCount). Carbon: \(carbonCount)/3."
+            : "The forge unlocks at 10 iron and 3 carbon crystals."
     }
 
     private var isNearForge: Bool {
@@ -606,51 +731,68 @@ struct PixelQuestGameView: View {
         forgeUnlocked || hasSteelIngot || hasSteelSword
     }
 
+    private var robotDamageX: CGFloat {
+        switch robotDamagePhase {
+        case 1: -0.16
+        case 2: 0.14
+        case 3: -0.07
+        default: 0
+        }
+    }
+
+    private var robotDamageY: CGFloat {
+        switch robotDamagePhase {
+        case 1: 0.05
+        case 2: 0.20
+        case 3: 0.10
+        default: 0
+        }
+    }
+
+    private var robotDamageRotation: Double {
+        switch robotDamagePhase {
+        case 1: -12
+        case 2: 19
+        case 3: -7
+        default: 0
+        }
+    }
+
+    private var robotDamageScale: CGFloat {
+        switch robotDamagePhase {
+        case 1: 0.94
+        case 2: 0.86
+        case 3: 0.95
+        default: 1
+        }
+    }
+
     var body: some View {
         ZStack {
             PixelQuestBackground()
 
-            ScrollView {
-                VStack(spacing: 18) {
-                    VStack(alignment: .leading, spacing: 9) {
-                        Text("MISSION: LEARNING ELEMENTS")
-                            .font(.system(size: 12, weight: .black, design: .monospaced))
-                            .foregroundStyle(.cyan)
-
-                        Text("Explore the caverns, collect 5 iron ores and 1 rare carbon shard, then tap the Moon Forge to craft a steel sword.")
-                            .font(.system(size: 14, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.84))
-                            .lineSpacing(3)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(Color.cyan.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(.cyan.opacity(0.34), lineWidth: 1)
-                    }
-
-                    VStack(spacing: 5) {
-                        Text("FORGE STEEL")
-                            .font(.system(size: 28, weight: .black, design: .monospaced))
-                            .foregroundStyle(.white)
-
-                        Text(objectiveText)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.58))
-                    }
-
-                    PixelQuestInventory(
-                        ironCount: ironCount,
-                        carbonCount: carbonCount,
-                        hasSteelIngot: hasSteelIngot,
-                        hasSteelSword: hasSteelSword
-                    )
-
+            GeometryReader { screenGeometry in
+                VStack(spacing: 0) {
                     GeometryReader { geometry in
-                        let cell = geometry.size.width / CGFloat(viewportColumns)
+                        let cell = max(
+                            max(
+                                geometry.size.width / viewportColumns,
+                                geometry.size.height / viewportRows
+                            ),
+                            1
+                        )
                         let worldWidth = cell * CGFloat(mapColumns)
                         let worldHeight = cell * CGFloat(mapRows)
+                        let visibleColumns = geometry.size.width / cell
+                        let visibleRows = geometry.size.height / cell
+                        let cameraX = min(
+                            max(playerPosition.x + 0.5 - visibleColumns * 0.5, 0),
+                            max(CGFloat(mapColumns) - visibleColumns, 0)
+                        )
+                        let cameraY = min(
+                            max(playerPosition.y + 0.5 - visibleRows * 0.5, 0),
+                            max(CGFloat(mapRows) - visibleRows, 0)
+                        )
 
                         ZStack(alignment: .topLeading) {
                             ZStack(alignment: .topLeading) {
@@ -659,7 +801,28 @@ struct PixelQuestGameView: View {
                                     .interpolation(.none)
                                     .scaledToFill()
                                     .clipped()
-                                .frame(width: worldWidth, height: worldHeight)
+                                    .frame(width: worldWidth, height: worldHeight)
+
+                                ForEach(dripstones) { dripstone in
+                                    Image("PixelQuestDripstones")
+                                        .resizable()
+                                        .interpolation(.none)
+                                        .scaledToFit()
+                                        .scaleEffect(x: dripstone.mirrored ? -1 : 1, y: 1)
+                                        .saturation(1.04)
+                                        .contrast(1.08)
+                                        .brightness(0.14)
+                                        .shadow(color: .cyan.opacity(0.16), radius: 4, y: 2)
+                                        .frame(
+                                            width: cell * dripstone.size,
+                                            height: cell * dripstone.size
+                                        )
+                                        .position(
+                                            x: (dripstone.position.x + 0.5) * cell,
+                                            y: (dripstone.position.y + 0.5) * cell
+                                        )
+                                        .accessibilityHidden(true)
+                                }
 
                                 ForEach(ironDeposits) { deposit in
                                     if !collectedIronIDs.contains(deposit.id) {
@@ -676,41 +839,58 @@ struct PixelQuestGameView: View {
                                     }
                                 }
 
-                                if !collectedCarbon {
-                                    PixelResourceSprite(
-                                        imageName: "PixelQuestCarbonCrystal",
-                                        label: "Rare carbon shard",
-                                        glowColor: .cyan
-                                    )
-                                        .frame(width: cell * 0.78, height: cell * 0.78)
-                                        .position(
-                                            x: (carbonPosition.x + 0.5) * cell,
-                                            y: (carbonPosition.y + 0.5) * cell
+                                ForEach(carbonDeposits) { deposit in
+                                    if !collectedCarbonIDs.contains(deposit.id) {
+                                        PixelResourceSprite(
+                                            imageName: "PixelQuestCarbonCrystal",
+                                            label: "Rare carbon crystal \(deposit.id + 1)",
+                                            glowColor: .cyan
                                         )
-                                }
-
-                                ForEach(thirdAreaBarriers) { barrier in
-                                    PixelMoonDepthBarrier(seed: barrier.id)
-                                        .frame(
-                                            width: cell * barrier.width,
-                                            height: cell * 0.72
-                                        )
-                                        .position(
-                                            x: (barrier.position.x + 0.5) * cell,
-                                            y: (barrier.position.y + 0.5) * cell
-                                        )
+                                            .frame(width: cell * 0.82, height: cell * 0.82)
+                                            .position(
+                                                x: (deposit.position.x + 0.5) * cell,
+                                                y: (deposit.position.y + 0.5) * cell
+                                            )
+                                    }
                                 }
 
                                 ForEach(rustMonsters) { monster in
-                                    PixelRustMonsterSprite(
-                                        direction: monster.direction,
-                                        action: monster.action
-                                    )
-                                        .frame(width: cell * 0.92, height: cell * 0.92)
+                                    if !monster.isBoss || hasSteelSword {
+                                        let monsterSize = monster.isBoss ? 0.86 : 0.70
+
+                                        ZStack(alignment: .bottom) {
+                                            ZStack(alignment: .top) {
+                                                PixelRustMonsterSprite(
+                                                    direction: monster.direction,
+                                                    action: monster.action
+                                                )
+                                                .padding(.bottom, 5)
+
+                                                if monster.isBoss {
+                                                    Image("PixelQuestRustBossCrown")
+                                                        .resizable()
+                                                        .interpolation(.none)
+                                                        .scaledToFit()
+                                                        .frame(width: cell * 0.42, height: cell * 0.25)
+                                                        .offset(y: -cell * 0.10)
+                                                        .shadow(color: .orange.opacity(0.48), radius: 3)
+                                                }
+                                            }
+
+                                            PixelRustMonsterHealthBar(
+                                                health: monster.health,
+                                                maximumHealth: monster.isBoss ? 3 : 2,
+                                                isBoss: monster.isBoss
+                                            )
+                                            .frame(width: cell * (monster.isBoss ? 0.66 : 0.54), height: 3)
+                                        }
+                                        .frame(width: cell * monsterSize, height: cell * monsterSize)
                                         .position(
                                             x: (monster.position.x + 0.5) * cell,
                                             y: (monster.position.y + 0.5) * cell
                                         )
+                                        .transition(.scale(scale: 0.55).combined(with: .opacity))
+                                    }
                                 }
 
                                 Image("PixelQuestIronCavernsSign")
@@ -734,7 +914,7 @@ struct PixelQuestGameView: View {
                                     if isNearForge && forgeAccessGranted {
                                         showingForge = true
                                     } else if !forgeAccessGranted {
-                                        forgeHint = "Moon Forge locked: collect 5 iron ores and 1 carbon shard."
+                                        forgeHint = "Moon Forge locked: collect 10 iron ores and 3 carbon crystals."
                                     } else {
                                         forgeHint = "Move closer to the robotic forge, then tap it."
                                     }
@@ -753,18 +933,46 @@ struct PixelQuestGameView: View {
                                 .accessibilityLabel(
                                     forgeAccessGranted
                                         ? "Interactive moon forge"
-                                        : "Locked moon forge. Requires five iron ores and one carbon shard."
+                                        : "Locked moon forge. Requires ten iron ores and three carbon crystals."
                                 )
 
-                                RobotSpriteView(
-                                    direction: robotDirection,
-                                    isWalking: robotIsWalking
-                                )
+                                ZStack {
+                                    if hasSteelSword {
+                                        PixelSwordEquippedRobotView(
+                                            direction: robotDirection,
+                                            isWalking: robotIsWalking,
+                                            isAttacking: robotIsAttacking
+                                        )
+                                    } else {
+                                        RobotSpriteView(
+                                            direction: robotDirection,
+                                            isWalking: robotIsWalking
+                                        )
+                                    }
+
+                                    if robotIsDamaged {
+                                        Image("PixelQuestDamageBurst\(min(robotDamagePhase, 3))")
+                                            .resizable()
+                                            .interpolation(.none)
+                                            .scaledToFit()
+                                            .frame(width: cell * 0.92, height: cell * 0.92)
+                                            .blendMode(.screen)
+                                    }
+                                }
                                     .frame(width: cell * 1.18, height: cell * 1.18)
+                                    .scaleEffect(robotDamageScale)
+                                    .rotationEffect(.degrees(robotDamageRotation))
+                                    .offset(
+                                        x: cell * robotDamageX,
+                                        y: cell * robotDamageY
+                                    )
+                                    .saturation(robotIsDamaged ? 0.56 : 1)
+                                    .brightness(robotIsDamaged ? 0.14 : 0)
                                     .position(
                                         x: (playerPosition.x + 0.5) * cell,
                                         y: (playerPosition.y + 0.54) * cell
                                     )
+                                    .animation(.easeInOut(duration: 0.10), value: robotDamagePhase)
                                     .animation(
                                         .linear(duration: 0.034),
                                         value: playerPosition
@@ -772,27 +980,48 @@ struct PixelQuestGameView: View {
                             }
                             .frame(width: worldWidth, height: worldHeight)
                             .offset(
-                                x: -cell * horizontalCameraOffsetCells,
-                                y: -cell * verticalCameraOffsetCells
+                                x: -cell * cameraX,
+                                y: -cell * cameraY
                             )
                             .animation(.linear(duration: 0.05), value: playerPosition.x)
                             .animation(.linear(duration: 0.05), value: playerPosition.y)
 
                             VStack {
-                                HStack {
+                                HStack(spacing: 7) {
+                                    Button {
+                                        dismiss()
+                                    } label: {
+                                        Image(systemName: "chevron.left")
+                                            .font(.system(size: 11, weight: .black))
+                                            .foregroundStyle(.white)
+                                            .frame(width: 28, height: 28)
+                                            .background(.black.opacity(0.76), in: RoundedRectangle(cornerRadius: 8))
+                                    }
+                                    .buttonStyle(.plain)
+
                                     Text(areaTitle)
-                                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                                        .font(.system(size: 11, weight: .black, design: .monospaced))
                                         .foregroundStyle(areaAccent)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 5)
-                                        .background(.black.opacity(0.7), in: Capsule())
-                                    Spacer()
+                                        .shadow(color: .black.opacity(0.9), radius: 2)
+                                    Spacer(minLength: 4)
+
+                                    PixelQuestHUDPill(
+                                        text: "Fe \(ironCount)/10",
+                                        imageName: "PixelQuestIronOre",
+                                        color: .orange
+                                    )
+
+                                    PixelQuestHUDPill(
+                                        text: "C \(carbonCount)/3",
+                                        imageName: "PixelQuestCarbonCrystal",
+                                        color: .cyan
+                                    )
 
                                     if currentRow == 1 && currentColumn == 1 && isNearForge {
                                         Label(
                                             forgeAccessGranted
                                                 ? "CRAFT STEEL SWORD"
-                                                : "LOCKED \(ironCount)/5 Fe · \(carbonCount)/1 C",
+                                                : "LOCKED \(ironCount)/10 Fe · \(carbonCount)/3 C",
                                             systemImage: forgeAccessGranted ? "hand.tap.fill" : "lock.fill"
                                         )
                                             .font(.system(size: 8, weight: .black, design: .monospaced))
@@ -806,29 +1035,43 @@ struct PixelQuestGameView: View {
                                     }
                                 }
 
+                                Text(forgeHint.uppercased())
+                                    .font(.system(size: 12, weight: .black, design: .monospaced))
+                                    .foregroundStyle(.white)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.72)
+                                    .frame(maxWidth: 440)
+                                    .padding(.horizontal, 52)
+                                    .shadow(color: .black.opacity(0.95), radius: 2, y: 1)
+
                                 Spacer()
 
-                                HStack {
-                                    PixelJoystick(
-                                        isEnabled: pickupMaterial == nil,
-                                        move: move,
-                                        stopped: { robotIsWalking = false }
-                                    )
-                                    .scaleEffect(0.84, anchor: .bottomLeading)
-
+                                HStack(alignment: .bottom) {
                                     Spacer()
 
                                     VStack(alignment: .trailing, spacing: 7) {
-                                        Label("SHIELD \(shieldCount)/3", systemImage: "shield.fill")
-                                            .font(.system(size: 8, weight: .black, design: .monospaced))
-                                            .foregroundStyle(shieldCount > 1 ? .cyan : .orange)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 5)
-                                            .background(.black.opacity(0.72), in: Capsule())
+                                        if hasSteelSword {
+                                            Button(action: swingSteelSword) {
+                                                Image("PixelQuestAttackButton")
+                                                    .resizable()
+                                                    .interpolation(.none)
+                                                    .scaledToFit()
+                                                    .frame(width: 58, height: 58)
+                                                    .scaleEffect(robotIsAttacking ? 0.90 : 1)
+                                                    .opacity(swordAttackReady ? 1 : 0.48)
+                                            }
+                                            .buttonStyle(.plain)
+                                            .disabled(!swordAttackReady || robotIsAttacking)
+                                            .accessibilityLabel("Attack with steel sword")
+                                            .accessibilityHint("Swings the sword. One second cooldown between attacks.")
+                                        }
+
+                                        PixelHeartMeter(lives: shieldCount)
 
                                         PixelLearningHUD(
                                             ironUnlocked: ironCount > 0,
-                                            carbonUnlocked: collectedCarbon,
+                                            carbonUnlocked: !collectedCarbonIDs.isEmpty,
                                             steelUnlocked: hasSteelIngot || hasSteelSword
                                         ) { material in
                                             selectedLearningMaterial = material
@@ -837,68 +1080,25 @@ struct PixelQuestGameView: View {
                                 }
                             }
                             .padding(10)
+                            .frame(
+                                width: geometry.size.width,
+                                height: geometry.size.height
+                            )
+
                         }
                     }
-                    .aspectRatio(
-                        CGFloat(viewportColumns) / CGFloat(viewportRows),
-                        contentMode: .fit
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 18)
-                            .stroke(.cyan.opacity(0.34), lineWidth: 2)
-                    }
-
-                    HStack(spacing: 18) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("LANDSCAPE QUEST CONTROLS")
-                                .font(.system(size: 11, weight: .black, design: .monospaced))
-                                .foregroundStyle(.cyan)
-
-                            Text("Turn your phone sideways for the widest view. The joystick now stays inside the map.")
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.white.opacity(0.58))
-
-                            Text(forgeHint)
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
-                                .foregroundStyle(isNearForge ? .orange : .white.opacity(0.46))
-                                .lineLimit(2)
-                        }
-
-                        Spacer(minLength: 0)
-                    }
-                    .padding(14)
-                    .background(Color.black.opacity(0.28), in: RoundedRectangle(cornerRadius: 18))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 18)
-                            .stroke(.cyan.opacity(0.22), lineWidth: 1)
-                    }
-
-                    Button(action: restart) {
-                        Label(
-                            "Restart Quest",
-                            systemImage: "arrow.counterclockwise"
-                        )
-                        .font(.system(size: 13, weight: .black, design: .monospaced))
-                        .foregroundStyle(.cyan)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            Color.cyan.opacity(0.1),
-                            in: RoundedRectangle(cornerRadius: 14)
-                        )
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(.cyan.opacity(0.35), lineWidth: 1)
-                        }
-                        .contentShape(RoundedRectangle(cornerRadius: 14))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.bottom, 90)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
                 }
-                .frame(maxWidth: 900)
-                .padding(20)
-                .frame(maxWidth: .infinity)
+                .frame(
+                    width: screenGeometry.size.width,
+                    height: screenGeometry.size.height
+                )
+                .overlay {
+                    if screenGeometry.size.height > screenGeometry.size.width {
+                        PixelQuestLandscapePrompt()
+                    }
+                }
             }
 
             if let pickupMaterial {
@@ -907,9 +1107,41 @@ struct PixelQuestGameView: View {
                 }
                 .zIndex(20)
             }
+
+            if showingDeathScreen {
+                PixelQuestDeathScreen(
+                    quit: quitQuest,
+                    playAgain: restart
+                )
+                .transition(.opacity)
+                .zIndex(40)
+            }
         }
-        .navigationTitle("Pixel Quest")
-        .navigationBarTitleDisplayMode(.inline)
+        // Keep the movement control on the actual game viewport. Placing it at
+        // this outermost layer prevents the scrolling map and rotation prompt
+        // from clipping or covering it.
+        .overlay(alignment: .bottomLeading) {
+            if pickupMaterial == nil && !showingDeathScreen {
+                PixelJoystick(
+                    isEnabled: true,
+                    move: move,
+                    stopped: { robotIsWalking = false }
+                )
+                .padding(.leading, 14)
+                .padding(.bottom, 14)
+                .zIndex(100)
+            }
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            isPlaying = true
+        }
+        .onChange(of: hasSteelSword) {
+            guard hasSteelSword else { return }
+            withAnimation(.spring(response: 0.52, dampingFraction: 0.72)) {
+                forgeHint = "A crowned Rust Boss has emerged in the Crystal Depths. Use your new steel sword!"
+            }
+        }
         .sheet(item: $selectedLearningMaterial) { material in
             PixelMaterialLearningView(material: material)
                 .presentationDetents([.large])
@@ -930,7 +1162,10 @@ struct PixelQuestGameView: View {
     }
 
     private func move(dx: CGFloat, dy: CGFloat) {
-        guard pickupMaterial == nil else {
+        guard pickupMaterial == nil,
+              shieldCount > 0,
+              !robotIsAttacking,
+              !showingDeathScreen else {
             robotIsWalking = false
             return
         }
@@ -961,7 +1196,7 @@ struct PixelQuestGameView: View {
 
         if nextPosition.y >= CGFloat(zoneSize),
            forgeHint == "Walk south through the gateway into the crystal pit." {
-            forgeHint = "Collect all 5 iron ores and the rare carbon shard."
+            forgeHint = "Collect all 10 iron ores and all 3 rare carbon crystals."
         }
 
         if let deposit = ironDeposits.first(where: {
@@ -980,14 +1215,21 @@ struct PixelQuestGameView: View {
             }
         }
 
-        if isNear(playerPosition, carbonPosition) && !collectedCarbon {
-            collectedCarbon = true
-            carbonCount += 1
+        if let deposit = carbonDeposits.first(where: {
+            !collectedCarbonIDs.contains($0.id)
+                && isNear(playerPosition, $0.position, radius: 0.54)
+        }) {
+            collectedCarbonIDs.insert(deposit.id)
+            let newCarbonCount = carbonCount + 1
+            carbonCount = newCarbonCount
             robotIsWalking = false
-            pickupMaterial = .carbon
-            forgeHint = ironCount >= requiredIronCount
+            if !hasShownCarbonPickupLesson {
+                hasShownCarbonPickupLesson = true
+                pickupMaterial = .carbon
+            }
+            forgeHint = ironCount >= requiredIronCount && newCarbonCount >= requiredCarbonCount
                 ? "All materials found. Tap the Moon Forge to craft the steel sword."
-                : "Rare carbon found. Keep searching for all 5 iron ores."
+                : "Carbon crystal collected: \(newCarbonCount)/\(requiredCarbonCount)."
         }
 
         checkRustMonsterContact()
@@ -1027,10 +1269,6 @@ struct PixelQuestGameView: View {
         }
 
         if wallCollisionZones.contains(where: { $0.contains(position) }) {
-            return false
-        }
-
-        if thirdAreaBarrierZones.contains(where: { $0.contains(position) }) {
             return false
         }
 
@@ -1101,30 +1339,47 @@ struct PixelQuestGameView: View {
         ironCount = 0
         carbonCount = 0
         collectedIronIDs.removeAll()
-        collectedCarbon = false
+        collectedCarbonIDs.removeAll()
         hasSteelIngot = false
         hasSteelSword = false
         selectedLearningMaterial = nil
         pickupMaterial = nil
+        hasShownCarbonPickupLesson = false
         showingForge = false
         forgeHint = "Walk south through the gateway into the crystal pit."
         robotDirection = .south
         robotIsWalking = false
+        robotIsAttacking = false
+        swordAttackReady = true
+        robotIsDamaged = false
+        robotDamagePhase = 0
+        showingDeathScreen = false
         lastDirectionChange = .distantPast
         shieldCount = 3
         lastRustHit = .distantPast
         rustMonsters = [
-            PixelRustMonster(id: 0, position: CGPoint(x: 2.20, y: 16.20), direction: .east, action: .moving, ticksRemaining: 38),
-            PixelRustMonster(id: 1, position: CGPoint(x: 7.60, y: 17.10), direction: .southWest, action: .idle, ticksRemaining: 14),
-            PixelRustMonster(id: 2, position: CGPoint(x: 10.60, y: 18.10), direction: .northWest, action: .moving, ticksRemaining: 52)
+            PixelRustMonster(id: 0, position: CGPoint(x: 4.55, y: 9.72), direction: .east, action: .moving, ticksRemaining: 38, isAggro: false, health: 2, isBoss: false),
+            PixelRustMonster(id: 1, position: CGPoint(x: 10.45, y: 10.18), direction: .southWest, action: .idle, ticksRemaining: 14, isAggro: false, health: 2, isBoss: false),
+            PixelRustMonster(id: 2, position: CGPoint(x: 6.70, y: 17.35), direction: .northWest, action: .moving, ticksRemaining: 52, isAggro: false, health: 3, isBoss: true),
+            PixelRustMonster(id: 3, position: CGPoint(x: 2.25, y: 16.20), direction: .southEast, action: .idle, ticksRemaining: 26, isAggro: false, health: 2, isBoss: false),
+            PixelRustMonster(id: 4, position: CGPoint(x: 9.35, y: 15.72), direction: .west, action: .moving, ticksRemaining: 44, isAggro: false, health: 2, isBoss: false)
         ]
+    }
+
+    private func quitQuest() {
+        isPlaying = false
+        quitToMenu()
     }
 
     @MainActor
     private func runRustMonsterLoop() async {
         while !Task.isCancelled {
             try? await Task.sleep(for: .milliseconds(110))
-            guard !Task.isCancelled, pickupMaterial == nil, !showingForge else { continue }
+            guard !Task.isCancelled,
+                  pickupMaterial == nil,
+                  !showingForge,
+                  !showingDeathScreen,
+                  shieldCount > 0 else { continue }
             updateRustMonsters()
             checkRustMonsterContact()
         }
@@ -1132,11 +1387,47 @@ struct PixelQuestGameView: View {
 
     private func updateRustMonsters() {
         for index in rustMonsters.indices {
+            // The crowned boss enters the map only after the player has
+            // actually forged the steel sword.
+            if rustMonsters[index].isBoss && !hasSteelSword {
+                continue
+            }
+
             if rustMonsters[index].action == .attacking {
                 rustMonsters[index].ticksRemaining -= 1
                 if rustMonsters[index].ticksRemaining <= 0 {
-                    rustMonsters[index].action = .idle
+                    rustMonsters[index].action = rustMonsters[index].isAggro ? .moving : .idle
                     rustMonsters[index].ticksRemaining = 10 + index * 3
+                }
+                continue
+            }
+
+            let dx = playerPosition.x - rustMonsters[index].position.x
+            let dy = playerPosition.y - rustMonsters[index].position.y
+            let distance = hypot(dx, dy)
+            let aggroRadius: CGFloat = rustMonsters[index].isBoss ? 4.5 : 3.4
+            let disengageRadius = aggroRadius + 1.8
+
+            if rustMonsters[index].isAggro && distance > disengageRadius {
+                rustMonsters[index].isAggro = false
+                rustMonsters[index].action = .idle
+                rustMonsters[index].ticksRemaining = 10 + index * 3
+            } else if !rustMonsters[index].isAggro && distance <= aggroRadius {
+                rustMonsters[index].isAggro = true
+            }
+
+            if rustMonsters[index].isAggro {
+                rustMonsters[index].direction = RobotDirection(dx: dx, dy: dy)
+                rustMonsters[index].action = .moving
+                let vector = rustMonsters[index].direction.movementVector
+                let speed: CGFloat = rustMonsters[index].isBoss ? 0.020 : 0.027
+                let proposed = CGPoint(
+                    x: rustMonsters[index].position.x + vector.dx * speed,
+                    y: rustMonsters[index].position.y + vector.dy * speed
+                )
+
+                if isRustMonsterWalkable(proposed) {
+                    rustMonsters[index].position = proposed
                 }
                 continue
             }
@@ -1152,8 +1443,8 @@ struct PixelQuestGameView: View {
 
             let vector = rustMonsters[index].direction.movementVector
             let proposed = CGPoint(
-                x: rustMonsters[index].position.x + vector.dx * 0.035,
-                y: rustMonsters[index].position.y + vector.dy * 0.035
+                x: rustMonsters[index].position.x + vector.dx * 0.016,
+                y: rustMonsters[index].position.y + vector.dy * 0.016
             )
 
             if isRustMonsterWalkable(proposed) {
@@ -1171,23 +1462,27 @@ struct PixelQuestGameView: View {
     }
 
     private func isRustMonsterWalkable(_ position: CGPoint) -> Bool {
-        let monsterBounds = PixelCollisionRect(
-            minX: 1.05,
-            maxX: 11.95,
-            minY: 14.95,
-            maxY: 19.25
-        )
-        guard monsterBounds.contains(position),
-              !thirdAreaBarrierZones.contains(where: { $0.contains(position) }) else {
+        guard position.x >= 0,
+              position.x <= CGFloat(mapColumns - 1),
+              position.y >= 0,
+              position.y <= CGFloat(mapRows - 1),
+              isInsidePlayableRegion(position),
+              !wallCollisionZones.contains(where: { $0.contains(position) }) else {
             return false
         }
         return !objectCollisionZones.contains(where: { $0.contains(position) })
     }
 
     private func checkRustMonsterContact() {
-        guard Date().timeIntervalSince(lastRustHit) > 1.25,
+        guard shieldCount > 0,
+              Date().timeIntervalSince(lastRustHit) > 3.25,
               let monsterIndex = rustMonsters.firstIndex(where: {
-                  hypot(playerPosition.x - $0.position.x, playerPosition.y - $0.position.y) < 0.62
+                  guard !$0.isBoss || hasSteelSword else { return false }
+                  let attackRadius: CGFloat = $0.isBoss ? 0.72 : 0.56
+                  return hypot(
+                      playerPosition.x - $0.position.x,
+                      playerPosition.y - $0.position.y
+                  ) < attackRadius
               }) else { return }
 
         lastRustHit = Date()
@@ -1198,27 +1493,135 @@ struct PixelQuestGameView: View {
             dy: playerPosition.y - rustMonsters[monsterIndex].position.y
         )
         rustMonsters[monsterIndex].action = .attacking
-        rustMonsters[monsterIndex].ticksRemaining = 8
+        rustMonsters[monsterIndex].ticksRemaining = 13
 
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(320))
+            try? await Task.sleep(for: .milliseconds(560))
             guard let attackingMonster = rustMonsters.first(where: { $0.id == monsterID }),
                   hypot(
                     playerPosition.x - attackingMonster.position.x,
                     playerPosition.y - attackingMonster.position.y
-                  ) < 0.92 else { return }
+                  ) < (attackingMonster.isBoss ? 0.80 : 0.64) else { return }
             applyRustMonsterDamage()
         }
     }
 
     private func applyRustMonsterDamage() {
-        if shieldCount > 1 {
-            shieldCount -= 1
-            playerPosition = CGPoint(x: 6.45, y: 14.95)
-            forgeHint = "Rust monster hit! Shield \(shieldCount)/3. You were moved to the cavern entrance."
+        guard shieldCount > 0 else { return }
+
+        shieldCount -= 1
+        playRobotDamageAnimation()
+
+        if shieldCount > 0 {
+            forgeHint = "Rust monster hit! \(shieldCount) hearts left. Move away before it attacks again."
         } else {
-            restart()
-            forgeHint = "Rust monsters broke your shield. The Learning Elements quest restarted."
+            robotIsWalking = false
+            forgeHint = "Systems critical — the robot is down."
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(760))
+                guard shieldCount == 0 else { return }
+                withAnimation(.easeInOut(duration: 0.24)) {
+                    showingDeathScreen = true
+                }
+            }
+        }
+    }
+
+    private func playRobotDamageAnimation() {
+        robotDamagePhase = 0
+        robotIsDamaged = true
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(80))
+            withAnimation(.easeOut(duration: 0.09)) {
+                robotDamagePhase = 1
+            }
+
+            try? await Task.sleep(for: .milliseconds(110))
+            withAnimation(.easeIn(duration: 0.11)) {
+                robotDamagePhase = 2
+            }
+
+            try? await Task.sleep(for: .milliseconds(150))
+            withAnimation(.easeOut(duration: 0.13)) {
+                robotDamagePhase = 3
+            }
+
+            try? await Task.sleep(for: .milliseconds(170))
+            withAnimation(.spring(response: 0.20, dampingFraction: 0.64)) {
+                robotDamagePhase = 4
+            }
+
+            try? await Task.sleep(for: .milliseconds(170))
+            withAnimation(.easeOut(duration: 0.12)) {
+                robotIsDamaged = false
+                robotDamagePhase = 0
+            }
+        }
+    }
+
+    private func swingSteelSword() {
+        guard hasSteelSword,
+              swordAttackReady,
+              !robotIsAttacking,
+              shieldCount > 0,
+              !showingDeathScreen else { return }
+
+        swordAttackReady = false
+        robotIsAttacking = true
+        robotIsWalking = false
+
+        let targetIndex = rustMonsters.indices.min(by: {
+                  hypot(
+                      playerPosition.x - rustMonsters[$0].position.x,
+                      playerPosition.y - rustMonsters[$0].position.y
+                  ) < hypot(
+                      playerPosition.x - rustMonsters[$1].position.x,
+                      playerPosition.y - rustMonsters[$1].position.y
+                  )
+              })
+
+        if let targetIndex {
+            let target = rustMonsters[targetIndex]
+            let distance = hypot(
+                playerPosition.x - target.position.x,
+                playerPosition.y - target.position.y
+            )
+
+            if distance < 1.55 {
+                robotDirection = RobotDirection(
+                    dx: target.position.x - playerPosition.x,
+                    dy: target.position.y - playerPosition.y
+                )
+                rustMonsters[targetIndex].health -= 1
+                rustMonsters[targetIndex].isAggro = true
+                rustMonsters[targetIndex].action = .attacking
+                rustMonsters[targetIndex].ticksRemaining = 6
+
+                if rustMonsters[targetIndex].health <= 0 {
+                    let wasBoss = rustMonsters[targetIndex].isBoss
+                    rustMonsters.remove(at: targetIndex)
+                    forgeHint = wasBoss
+                        ? "ULTIMATE RUST BOSS DEFEATED — steel wins this round!"
+                        : "Rust slime defeated. Find the ultimate Rust Boss."
+                } else {
+                    let maximumHealth = target.isBoss ? 3 : 2
+                    forgeHint = target.isBoss
+                        ? "Steel strike! Rust Boss health: \(rustMonsters[targetIndex].health)/\(maximumHealth)."
+                        : "Steel strike! Rust slime health: \(rustMonsters[targetIndex].health)/\(maximumHealth)."
+                }
+            } else {
+                forgeHint = "Sword swing — move closer to a rust monster to land a hit."
+            }
+        } else {
+            forgeHint = "Sword swing — the caverns are clear."
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(720))
+            robotIsAttacking = false
+            try? await Task.sleep(for: .milliseconds(280))
+            swordAttackReady = true
         }
     }
 }
@@ -1311,7 +1714,7 @@ struct RobotSpriteView: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
             let frames = frameNames
-            let framesPerSecond = isWalking ? 12.0 : 5.0
+            let framesPerSecond = isWalking ? 17.0 : 5.0
             let elapsed = max(context.date.timeIntervalSince(animationStart), 0)
             let frameIndex = reduceMotion
                 ? 0
@@ -1333,6 +1736,86 @@ struct RobotSpriteView: View {
     }
 }
 
+/// Uses complete PixelLab character frames in which the original robot is
+/// physically gripping the sword. The weapon is never rendered as a loose
+/// overlay, so it stays attached to the hand throughout movement and attacks.
+private struct PixelSwordEquippedRobotView: View {
+    let direction: RobotDirection
+    let isWalking: Bool
+    let isAttacking: Bool
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var animationStart = Date()
+    @State private var loadedFrames: [UIImage] = []
+
+    private var frameNames: [String] {
+        if isAttacking {
+            return (0..<9).map {
+                "PixelQuestSwordAttack\(direction.assetName)\($0)"
+            }
+        }
+
+        if isWalking {
+            return (0..<8).map {
+                "PixelQuestSwordWalk\(direction.assetName)\($0)"
+            }
+        }
+
+        return ["PixelQuestSwordIdle\(direction.assetName)0"]
+    }
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+            let frames = frameNames
+            let framesPerSecond = isAttacking ? 12.0 : (isWalking ? 17.0 : 1.0)
+            let elapsed = max(context.date.timeIntervalSince(animationStart), 0)
+            let frameIndex = reduceMotion
+                ? 0
+                : min(Int(elapsed * framesPerSecond), isAttacking ? frames.count - 1 : Int.max)
+                    % frames.count
+
+            let image = loadedFrames.indices.contains(frameIndex)
+                ? loadedFrames[frameIndex]
+                : UIImage(named: "RobotStill\(direction.assetName)")
+
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .interpolation(.none)
+                    .scaledToFit()
+            }
+        }
+        .onAppear(perform: reloadFrames)
+        .onChange(of: direction.rawValue) {
+            reloadFrames()
+        }
+        .onChange(of: isWalking) {
+            reloadFrames()
+        }
+        .onChange(of: isAttacking) {
+            reloadFrames()
+        }
+        .accessibilityLabel(
+            isAttacking
+                ? "Robot swinging steel sword"
+                : (isWalking ? "Robot walking with steel sword" : "Robot holding steel sword")
+        )
+    }
+
+    private func reloadFrames() {
+        loadedFrames = frameNames.compactMap { frameName in
+            guard let url = Bundle.main.url(
+                forResource: frameName,
+                withExtension: "png"
+            ) else {
+                return nil
+            }
+            return UIImage(contentsOfFile: url.path)
+        }
+        animationStart = Date()
+    }
+}
+
 struct PixelPosition: Equatable {
     let x: CGFloat
     let y: CGFloat
@@ -1343,10 +1826,11 @@ private struct PixelResourceDeposit: Identifiable {
     let position: PixelPosition
 }
 
-private struct PixelDepthBarrier: Identifiable {
+private struct PixelDripstonePlacement: Identifiable {
     let id: Int
     let position: PixelPosition
-    let width: CGFloat
+    let size: CGFloat
+    let mirrored: Bool
 }
 
 private struct PixelRustMonster: Identifiable {
@@ -1355,6 +1839,9 @@ private struct PixelRustMonster: Identifiable {
     var direction: RobotDirection
     var action: PixelRustMonsterAction
     var ticksRemaining: Int
+    var isAggro: Bool
+    var health: Int
+    let isBoss: Bool
 }
 
 private enum PixelRustMonsterAction: String {
@@ -1385,6 +1872,199 @@ private struct PixelCollisionCircle {
     }
 }
 
+private struct PixelQuestHUDPill: View {
+    let text: String
+    let imageName: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(imageName)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(width: 18, height: 18)
+
+            Text(text)
+                .font(.system(size: 8, weight: .black, design: .monospaced))
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(.black.opacity(0.74), in: Capsule())
+        .overlay {
+            Capsule()
+                .stroke(color.opacity(0.42), lineWidth: 1)
+        }
+    }
+}
+
+private struct PixelHeartMeter: View {
+    let lives: Int
+
+    var body: some View {
+        HStack(spacing: 5) {
+            ForEach(0..<3, id: \.self) { index in
+                Image("PixelQuestHeart")
+                    .resizable()
+                    .interpolation(.none)
+                    .scaledToFit()
+                    .frame(width: 29, height: 29)
+                    .saturation(index < lives ? 1.05 : 0)
+                    .brightness(index < lives ? 0.04 : -0.24)
+                    .opacity(index < lives ? 1 : 0.34)
+                    .scaleEffect(index < lives ? 1 : 0.90)
+                    .shadow(
+                        color: index < lives ? Color.red.opacity(0.58) : .clear,
+                        radius: 5
+                    )
+            }
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Player health")
+        .accessibilityValue("\(lives) of 3 hearts")
+    }
+}
+
+private struct PixelQuestDeathScreen: View {
+    let quit: () -> Void
+    let playAgain: () -> Void
+
+    var body: some View {
+        GeometryReader { geometry in
+            let panelWidth = min(geometry.size.width * 0.78, 620)
+            let panelHeight = panelWidth * 384 / 688
+
+            ZStack {
+                Color.black.opacity(0.74)
+                    .ignoresSafeArea()
+
+                ZStack {
+                    Image("PixelQuestDeathPanel")
+                        .resizable()
+                        .interpolation(.none)
+                        .scaledToFit()
+
+                    GeometryReader { panel in
+                        Text("SYSTEM FAILURE")
+                            .font(PixelQuestFont.ui(max(8, panel.size.width * 0.018)))
+                            .tracking(panel.size.width * 0.0015)
+                            .foregroundStyle(.white.opacity(0.82))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.65)
+                            .frame(
+                                width: panel.size.width * 0.27,
+                                height: panel.size.height * 0.16
+                            )
+                            .position(
+                                x: panel.size.width * 0.282,
+                                y: panel.size.height * 0.33
+                            )
+
+                        Text("YOU DIED")
+                            .font(PixelQuestFont.ui(max(25, panel.size.width * 0.055)))
+                            .tracking(panel.size.width * 0.002)
+                            .foregroundStyle(Color(red: 0.94, green: 0.30, blue: 0.16))
+                            .shadow(color: .black, radius: 0, x: 3, y: 3)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .position(
+                                x: panel.size.width * 0.64,
+                                y: panel.size.height * 0.34
+                            )
+
+                        Text("RUST RECLAIMED THE ROBOT")
+                            .font(PixelQuestFont.ui(max(9, panel.size.width * 0.017)))
+                            .tracking(panel.size.width * 0.0014)
+                            .foregroundStyle(.white.opacity(0.78))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.62)
+                            .frame(width: panel.size.width * 0.62)
+                            .position(
+                                x: panel.size.width * 0.60,
+                                y: panel.size.height * 0.51
+                            )
+
+                        HStack(spacing: 18) {
+                            deathButton(
+                                title: "QUIT",
+                                color: Color(red: 0.72, green: 0.28, blue: 0.16),
+                                action: quit
+                            )
+
+                            deathButton(
+                                title: "PLAY AGAIN",
+                                color: .cyan,
+                                action: playAgain
+                            )
+                        }
+                        .position(
+                            x: panel.size.width * 0.50,
+                            y: panel.size.height * 0.75
+                        )
+                    }
+                }
+                .frame(width: panelWidth, height: panelHeight)
+                .shadow(color: .black.opacity(0.84), radius: 24, y: 10)
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private func deathButton(
+        title: String,
+        color: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(PixelQuestFont.ui(14))
+                .tracking(0.7)
+                .foregroundStyle(.white)
+                .frame(minWidth: 128)
+                .padding(.vertical, 11)
+                .background(.black.opacity(0.72), in: Rectangle())
+                .overlay {
+                    Rectangle()
+                        .stroke(color.opacity(0.95), lineWidth: 3)
+                        .padding(1)
+                        .overlay {
+                            Rectangle()
+                                .stroke(.black.opacity(0.82), lineWidth: 1)
+                                .padding(5)
+                        }
+                }
+                .shadow(color: color.opacity(0.38), radius: 0, x: 3, y: 3)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct PixelQuestLandscapePrompt: View {
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "iphone.gen3.landscape")
+                .font(.system(size: 46, weight: .bold))
+                .foregroundStyle(.cyan)
+
+            Text("ROTATE TO PLAY")
+                .font(.system(size: 20, weight: .black, design: .monospaced))
+                .foregroundStyle(.white)
+
+            Text("Learning Elements uses a horizontal game screen.")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.62))
+        }
+        .padding(28)
+        .background(.black.opacity(0.92), in: RoundedRectangle(cornerRadius: 22))
+        .overlay {
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(.cyan.opacity(0.48), lineWidth: 2)
+        }
+        .padding(24)
+    }
+}
+
 struct PixelQuestInventory: View {
     let ironCount: Int
     let carbonCount: Int
@@ -1393,8 +2073,8 @@ struct PixelQuestInventory: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            inventoryItem("Fe", count: ironCount, target: 5, color: .orange)
-            inventoryItem("C", count: carbonCount, target: 1, color: .cyan)
+            inventoryItem("Fe", count: ironCount, target: 10, color: .orange)
+            inventoryItem("C", count: carbonCount, target: 3, color: .cyan)
 
             HStack(spacing: 6) {
                 Image(systemName: hasSteelSword ? "shield.lefthalf.filled" : "cube.fill")
@@ -1451,18 +2131,40 @@ struct PixelJoystick: View {
                 .frame(width: controlSize, height: controlSize)
 
             PixelJoystickThumbShape()
-                .fill(Color(red: 0.48, green: 0.56, blue: 0.66))
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.72, green: 0.74, blue: 0.77),
+                            Color(red: 0.42, green: 0.44, blue: 0.48),
+                            Color(red: 0.24, green: 0.25, blue: 0.28)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: knobSize, height: knobSize)
                 .overlay {
                     PixelJoystickThumbShape()
-                        .stroke(Color.black.opacity(0.78), lineWidth: 3)
+                        .stroke(.black.opacity(0.72), lineWidth: 3)
+
+                    VStack(spacing: 4) {
+                        HStack(spacing: 4) {
+                            Rectangle().fill(.white.opacity(0.34))
+                            Rectangle().fill(.white.opacity(0.13))
+                        }
+                        HStack(spacing: 4) {
+                            Rectangle().fill(.black.opacity(0.12))
+                            Rectangle().fill(.black.opacity(0.28))
+                        }
+                    }
+                    .padding(10)
                 }
-                .frame(width: knobSize, height: knobSize)
                 .offset(knobOffset)
         }
         .frame(width: controlSize, height: controlSize)
         .opacity(isEnabled ? 1 : 0.58)
         .contentShape(Circle())
-        .gesture(
+        .highPriorityGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged(updateJoystick)
                 .onEnded { _ in endMoving() }
@@ -1498,7 +2200,7 @@ struct PixelJoystick: View {
         movementTask = Task {
             while !Task.isCancelled {
                 let vector = movementVector
-                let stride: CGFloat = 0.07
+                let stride: CGFloat = 0.06
                 move(vector.dx * stride, vector.dy * stride)
                 try? await Task.sleep(for: .milliseconds(33))
             }
@@ -1828,6 +2530,24 @@ private struct PixelMaterialPickupCutscene: View {
                             .multilineTextAlignment(.center)
                             .foregroundStyle(.white)
 
+                        VStack(spacing: 7) {
+                            Text("SCROLL DOWN TO LEARN ABOUT THE ELEMENTS")
+                                .font(.system(size: 10, weight: .black, design: .monospaced))
+                                .tracking(1.2)
+                                .multilineTextAlignment(.center)
+                                .foregroundStyle(material.accent)
+
+                            Image(systemName: "arrow.down")
+                                .font(.system(size: 19, weight: .black))
+                                .foregroundStyle(material.accent)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(
+                            material.accent.opacity(0.10),
+                            in: RoundedRectangle(cornerRadius: 12)
+                        )
+
                         HStack(spacing: 10) {
                             PixelPickupStat(
                                 heading: "SYMBOL",
@@ -2149,8 +2869,8 @@ private struct PixelMaterialLearningView: View {
 }
 
 struct PixelQuestForgeView: View {
-    private let requiredIronCount = 5
-    private let requiredCarbonCount = 1
+    private let requiredIronCount = 10
+    private let requiredCarbonCount = 3
 
     @Binding var ironCount: Int
     @Binding var carbonCount: Int
@@ -2161,7 +2881,7 @@ struct PixelQuestForgeView: View {
     @State private var ironLoaded = false
     @State private var carbonLoaded = false
     @State private var isForging = false
-    @State private var workshopMessage = "Load 5 iron ores and 1 measured carbon shard."
+    @State private var workshopMessage = "Load 10 iron ores and 3 measured carbon crystals."
 
     private var forgeReady: Bool {
         ironLoaded && carbonLoaded && !isForging && !hasSteelIngot && !hasSteelSword
@@ -2172,13 +2892,121 @@ struct PixelQuestForgeView: View {
             PixelQuestBackground()
 
             ScrollView {
+                VStack(spacing: 14) {
+                    Text("MOON FORGE")
+                        .font(PixelQuestFont.ui(28))
+                        .foregroundStyle(.white)
+
+                    Text("10 IRON + 3 CARBON → STEEL")
+                        .font(PixelQuestFont.ui(13))
+                        .foregroundStyle(.cyan)
+
+                    PixelForgeWorkshopScene(isForging: isForging)
+                        .frame(maxWidth: 620)
+
+                    GeometryReader { geometry in
+                        let width = geometry.size.width
+                        let height = geometry.size.height
+
+                        ZStack {
+                            Image("PixelQuestForgeControlPanel")
+                                .resizable()
+                                .interpolation(.none)
+                                .scaledToFit()
+                                .frame(width: width, height: height)
+
+                            Text(isForging ? "FORGING STEEL..." : workshopMessage.uppercased())
+                                .font(PixelQuestFont.ui(10))
+                                .foregroundStyle(isForging ? .orange : .white)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.65)
+                                .multilineTextAlignment(.center)
+                                .frame(width: width * 0.34)
+                                .position(x: width * 0.50, y: height * 0.09)
+
+                            Button(action: loadIron) {
+                                Text(ironLoaded ? "IRON LOADED" : "IRON \(ironCount)/10")
+                                    .font(PixelQuestFont.ui(10))
+                                    .foregroundStyle(ironLoaded ? .green : .white)
+                                    .frame(width: width * 0.24, height: height * 0.23)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(ironCount < requiredIronCount || ironLoaded)
+                            .position(x: width * 0.18, y: height * 0.40)
+
+                            Button(action: loadCarbon) {
+                                Text(carbonLoaded ? "CARBON LOADED" : "CARBON \(carbonCount)/3")
+                                    .font(PixelQuestFont.ui(9))
+                                    .foregroundStyle(carbonLoaded ? .green : .white)
+                                    .frame(width: width * 0.24, height: height * 0.23)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(carbonCount < requiredCarbonCount || carbonLoaded)
+                            .position(x: width * 0.18, y: height * 0.65)
+
+                            Button(action: smeltSteel) {
+                                Text(isForging ? "FORGING" : "FIRE FORGE")
+                                    .font(PixelQuestFont.ui(11))
+                                    .foregroundStyle(forgeReady ? .white : .white.opacity(0.42))
+                                    .frame(width: width * 0.31, height: height * 0.19)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(!forgeReady)
+                            .position(x: width * 0.37, y: height * 0.84)
+
+                            Button(action: craftSteelSword) {
+                                Text(
+                                    hasSteelSword
+                                        ? "SWORD COMPLETE"
+                                        : (hasSteelIngot ? "CRAFT SWORD" : "STEEL REQUIRED")
+                                )
+                                .font(PixelQuestFont.ui(10))
+                                .foregroundStyle(hasSteelIngot ? .cyan : .white.opacity(0.48))
+                                .frame(width: width * 0.27, height: height * 0.58)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(!hasSteelIngot || hasSteelSword)
+                            .position(x: width * 0.77, y: height * 0.53)
+                        }
+                    }
+                    .aspectRatio(688.0 / 384.0, contentMode: .fit)
+                    .frame(maxWidth: 688)
+                    .shadow(color: .cyan.opacity(0.14), radius: 14, y: 7)
+
+                    Text("THE THREE CARBON CRYSTALS REPRESENT A SMALL, CONTROLLED CARBON DOSE. REAL STEEL IS STILL MOSTLY IRON.")
+                        .font(PixelQuestFont.ui(9))
+                        .foregroundStyle(.white.opacity(0.62))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 26)
+                }
+                .frame(maxWidth: 720)
+                .padding(18)
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .navigationTitle("Forge Workshop")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
+    }
+
+    private var legacyBody: some View {
+        ZStack {
+            PixelQuestBackground()
+
+            ScrollView {
                 VStack(spacing: 18) {
                     VStack(spacing: 5) {
                         Text("MOON FORGE")
                             .font(.system(size: 28, weight: .black, design: .monospaced))
                             .foregroundStyle(.white)
 
-                        Text("5 iron ores + 1 carbon shard → steel")
+                        Text("10 iron ores + 3 carbon crystals → steel")
                             .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundStyle(.cyan.opacity(0.78))
 
@@ -2215,7 +3043,7 @@ struct PixelQuestForgeView: View {
                                 PixelTapMaterialTab(
                                     imageName: "PixelQuestIronOre",
                                     title: "IRON ORE",
-                                    countText: "\(ironCount)/5",
+                                    countText: "\(ironCount)/10",
                                     color: .orange,
                                     isLoaded: ironLoaded,
                                     isAvailable: ironCount >= requiredIronCount && !ironLoaded,
@@ -2224,8 +3052,8 @@ struct PixelQuestForgeView: View {
 
                                 PixelTapMaterialTab(
                                     imageName: "PixelQuestCarbonCrystal",
-                                    title: "CARBON SHARD",
-                                    countText: "\(carbonCount)/1",
+                                    title: "CARBON CRYSTALS",
+                                    countText: "\(carbonCount)/3",
                                     color: .cyan,
                                     isLoaded: carbonLoaded,
                                     isAvailable: carbonCount >= requiredCarbonCount && !carbonLoaded,
@@ -2350,7 +3178,7 @@ struct PixelQuestForgeView: View {
             carbonLoaded = false
             hasSteelIngot = true
             isForging = false
-            workshopMessage = "Steel created. Drag the ingot onto the crafting table."
+            workshopMessage = "Steel created. Tap the sword slot to craft your weapon."
         }
     }
 
@@ -2361,7 +3189,7 @@ struct PixelQuestForgeView: View {
         }
         workshopMessage = carbonLoaded
             ? "Both materials loaded. Fire the forge!"
-            : "Five iron ores loaded. Tap the carbon shard."
+            : "Ten iron ores loaded. Tap the carbon crystals."
     }
 
     private func loadCarbon() {
@@ -2690,6 +3518,7 @@ private struct PixelRustMonsterSprite: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var animationStart = Date()
+    @State private var loadedFrames: [UIImage] = []
 
     private var frameNames: [String] {
         let prefix: String
@@ -2706,7 +3535,7 @@ private struct PixelRustMonsterSprite: View {
             frameCount = 7
         }
         return (0..<frameCount).map {
-            "PixelQuestRustMonster\(prefix)\(direction.assetName)\($0)"
+            "PixelQuestUnifiedRust\(prefix)\(direction.assetName)\($0)"
         }
     }
 
@@ -2714,71 +3543,83 @@ private struct PixelRustMonsterSprite: View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
             let frames = frameNames
             let framesPerSecond: Double = switch action {
-            case .idle: 6
-            case .moving: 12
-            case .attacking: 15
+            case .idle: 5
+            case .moving: 9
+            case .attacking: 10
             }
             let elapsed = max(context.date.timeIntervalSince(animationStart), 0)
             let frameIndex = reduceMotion
                 ? 0
                 : Int(elapsed * framesPerSecond) % frames.count
 
-            Image(frames[frameIndex])
-                .resizable()
-                .interpolation(.none)
-                .scaledToFit()
-                .shadow(color: .orange.opacity(0.32), radius: 5, y: 3)
+            let image = loadedFrames.indices.contains(frameIndex)
+                ? loadedFrames[frameIndex]
+                : UIImage(named: "PixelQuestUnifiedRust\(direction.assetName)")
+
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .interpolation(.none)
+                    .scaledToFit()
+                    .saturation(1.12)
+                    .contrast(1.06)
+                    .brightness(0.08)
+                    .shadow(color: .orange.opacity(0.48), radius: 5, y: 2)
+            }
         }
-        .onChange(of: direction.rawValue) { animationStart = Date() }
-        .onChange(of: action.rawValue) { animationStart = Date() }
+        .onAppear(perform: reloadFrames)
+        .onChange(of: direction.rawValue) {
+            reloadFrames()
+        }
+        .onChange(of: action.rawValue) {
+            animationStart = Date()
+            reloadFrames()
+        }
         .accessibilityLabel("Rust monster \(action.rawValue)")
+    }
+
+    private func reloadFrames() {
+        let images = frameNames.compactMap { frameName -> UIImage? in
+            guard let url = Bundle.main.url(
+                forResource: frameName,
+                withExtension: "png"
+            ) else {
+                return nil
+            }
+            return UIImage(contentsOfFile: url.path)
+        }
+
+        loadedFrames = images
+        animationStart = Date()
     }
 }
 
-private struct PixelMoonDepthBarrier: View {
-    let seed: Int
+private struct PixelRustMonsterHealthBar: View {
+    let health: Int
+    let maximumHealth: Int
+    let isBoss: Bool
 
     var body: some View {
-        Canvas { context, size in
-            let back = CGRect(
-                x: size.width * 0.04,
-                y: size.height * 0.12,
-                width: size.width * 0.92,
-                height: size.height * 0.58
-            )
-            context.fill(
-                Path(roundedRect: back, cornerRadius: size.height * 0.2),
-                with: .linearGradient(
-                    Gradient(colors: [
-                        Color(red: 0.30, green: 0.30, blue: 0.34),
-                        Color(red: 0.13, green: 0.13, blue: 0.16),
-                        Color(red: 0.055, green: 0.055, blue: 0.07)
-                    ]),
-                    startPoint: CGPoint(x: back.midX, y: back.minY),
-                    endPoint: CGPoint(x: back.midX, y: back.maxY)
-                )
-            )
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Rectangle()
+                    .fill(.black.opacity(0.78))
 
-            let front = CGRect(
-                x: size.width * 0.08,
-                y: size.height * 0.46,
-                width: size.width * 0.84,
-                height: size.height * 0.34
-            )
-            context.fill(
-                Path(roundedRect: front, cornerRadius: size.height * 0.12),
-                with: .color(Color.black.opacity(0.62))
-            )
-
-            for index in 0..<8 {
-                let x = CGFloat((index * 31 + seed * 17) % 89) / 89 * size.width
-                let y = size.height * (0.18 + CGFloat((index * 13 + seed * 7) % 31) / 100)
-                let pebble = CGRect(x: x, y: y, width: 3, height: 2)
-                context.fill(Path(ellipseIn: pebble), with: .color(.white.opacity(0.16)))
+                Rectangle()
+                    .fill(isBoss ? Color.orange : Color(red: 0.66, green: 0.24, blue: 0.10))
+                    .frame(
+                        width: geometry.size.width
+                            * CGFloat(max(health, 0))
+                            / CGFloat(max(maximumHealth, 1))
+                    )
+            }
+            .overlay {
+                Rectangle()
+                    .stroke(.white.opacity(isBoss ? 0.72 : 0.42), lineWidth: 1)
             }
         }
-        .shadow(color: .black.opacity(0.72), radius: 4, y: 5)
-        .accessibilityHidden(true)
+        .accessibilityLabel(isBoss ? "Rust Boss health" : "Rust monster health")
+        .accessibilityValue("\(health) of \(maximumHealth)")
     }
 }
 

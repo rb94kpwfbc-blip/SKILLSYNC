@@ -466,6 +466,7 @@ extension EnvironmentValues {
 struct HomeView: View {
     let logout: () -> Void
     @State private var selectedTab = SkillSyncTab.home
+    @State private var isPixelQuestPlaying = false
 
     var body: some View {
         ZStack {
@@ -563,7 +564,10 @@ struct HomeView: View {
                     selectedTab == .tutor
                 )
 
-            PixelQuestView(isActive: selectedTab == .play)
+            PixelQuestView(
+                isActive: selectedTab == .play,
+                isPlaying: $isPixelQuestPlaying
+            )
                 .opacity(selectedTab == .play ? 1 : 0)
                 .allowsHitTesting(selectedTab == .play)
                 .zIndex(selectedTab == .play ? 1 : 0)
@@ -574,7 +578,9 @@ struct HomeView: View {
         }
         .tint(.cyan)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            AuroraTabBar(selection: $selectedTab)
+            if selectedTab != .play || !isPixelQuestPlaying {
+                AuroraTabBar(selection: $selectedTab)
+            }
         }
         .preferredColorScheme(.dark)
     }

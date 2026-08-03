@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 6035F65F3005F1B6000AFD56 /* Build configuration list for PBXProject "SkillSync" */;
+			buildConfigurationList = 6035F65F3005F1B6000AFD56 /* Build configuration list for PBXProject "skill.syncUPDATED" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -330,7 +330,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6035F65F3005F1B6000AFD56 /* Build configuration list for PBXProject "SkillSync" */ = {
+		6035F65F3005F1B6000AFD56 /* Build configuration list for PBXProject "skill.syncUPDATED" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6035F66D3005F1B7000AFD56 /* Debug */,
